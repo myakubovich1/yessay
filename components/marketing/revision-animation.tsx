@@ -2,16 +2,12 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { Check, Sparkles, X, Zap } from "lucide-react";
+import { Check, Sparkles, X, Zap, MousePointer2 } from "lucide-react";
 
 /**
- * DISNEY-STANDARD PREMIUM ANIMATION
- * Follows 12 Principles of Animation:
- * 1. Squash and Stretch (Breathing & Reactions)
- * 2. Anticipation (Eye movements before head turns)
- * 3. Follow Through & Overlapping Action (Hair sway)
- * 4. Slow In and Slow Out (Custom Bezier curves)
- * 5. Appeal (Organic silhouettes)
+ * PREMIUM "HUMAAANS-STYLE" CHARACTER ANIMATION
+ * Style: Flat, hand-drawn vector aesthetic (Reference: Screenshot)
+ * Features: Flowing hair, oversized clothing, long limbs, dynamic posing
  */
 
 export function RevisionAnimation() {
@@ -26,172 +22,159 @@ export function RevisionAnimation() {
         if (current === "fixing") return "success";
         return "struggle";
       });
-    }, 5500);
+    }, 6500);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="relative flex h-full min-h-[450px] w-full items-center justify-center overflow-hidden py-12">
+    <div className="relative flex h-full min-h-[520px] w-full items-center justify-center overflow-hidden py-12">
       <AnimatePresence mode="wait">
         {phase === "struggle" && <StruggleView key="struggle" />}
         {phase === "fixing" && <FixingView key="fixing" />}
         {phase === "success" && <SuccessView key="success" />}
       </AnimatePresence>
 
-      {/* Atmospheric Background */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <motion.div
+      {/* Stylized Background Blob (Matching Screenshot) */}
+      <div className="absolute inset-0 -z-10 flex items-center justify-center overflow-hidden">
+        <motion.svg
           animate={{
-            scale: phase === "success" ? 1.6 : 1,
-            opacity: phase === "success" ? 0.25 : 0.08,
-            backgroundColor: phase === "success" ? "#c8f85a" : "#ff8b5e",
+            scale: [1, 1.05, 1],
+            rotate: [0, 5, 0],
           }}
-          transition={{ duration: 2 }}
-          className="absolute left-1/2 top-1/2 size-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[120px]"
-        />
+          transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+          viewBox="0 0 500 500"
+          className="h-[120%] w-[120%] opacity-[0.05]"
+        >
+          <path
+            d="M410.5,333.5 Q381,427 280,418.5 Q179,410 119.5,321 Q60,232 121.5,142.5 Q183,53 285.5,69.5 Q388,86 429,209.5 Q470,333 410.5,333.5"
+            fill="#5C90D2"
+          />
+        </motion.svg>
       </div>
     </div>
   );
 }
 
-function DisneyCharacter({ mood }: { mood: "stressed" | "analyzing" | "hero" }) {
-  // Custom cubic-bezier for "organic" feel
-  const organicTransition = {
-    duration: 3,
-    repeat: Infinity,
-    ease: [0.45, 0, 0.55, 1],
-  };
+function HumaaanCharacter({ mood, armRaised = false }: { mood: "stressed" | "focused" | "triumphant"; armRaised?: boolean }) {
+  const bodyTransition = { duration: 3, repeat: Infinity, ease: "easeInOut" };
 
   return (
-    <div className="relative size-64 sm:size-72">
-      <svg viewBox="0 0 240 240" className="h-full w-full drop-shadow-2xl">
-        <defs>
-          <linearGradient id="skinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#FFFDF8" />
-            <stop offset="100%" stopColor="#F9E8D2" />
-          </linearGradient>
-          <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur in="SourceAlpha" stdDeviation="3" />
-            <feOffset dx="0" dy="2" result="offsetblur" />
-            <feComponentTransfer>
-              <feFuncA type="linear" slope="0.2" />
-            </feComponentTransfer>
-            <feMerge>
-              <feMergeNode />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Torso / Shoulders (Squash & Stretch) */}
+    <div className="relative h-[340px] w-[280px]">
+      <svg viewBox="0 0 200 240" className="h-full w-full overflow-visible">
+        {/* Hair - Large and flowing */}
         <motion.path
           animate={{
-            d: mood === "hero" 
-              ? "M50 220 Q120 180 190 220 L190 240 L50 240 Z" 
-              : "M60 230 Q120 200 180 230 L180 240 L60 240 Z",
-            scaleY: [1, 1.02, 1],
+            d: mood === "stressed" 
+              ? "M60 40 Q30 20 20 80 Q10 140 50 130 Q70 110 70 80 Q70 50 60 40" 
+              : "M60 40 Q10 20 5 90 Q0 160 55 140 Q80 110 80 80 Q80 50 60 40",
+            rotate: mood === "stressed" ? [0, -3, 3, 0] : [0, 2, -2, 0]
           }}
-          transition={organicTransition}
-          d="M60 230 Q120 200 180 230 L180 240 L60 240 Z"
+          transition={bodyTransition}
           fill="#171912"
         />
 
-        {/* Neck */}
-        <path d="M110 180 Q120 195 130 180 L130 210 L110 210 Z" fill="#F9E8D2" />
+        {/* Head */}
+        <motion.path
+          animate={{ y: mood === "stressed" ? [0, 4, 0] : [0, -2, 0] }}
+          transition={bodyTransition}
+          d="M75 80 Q75 55 100 55 Q125 55 125 80 Q125 110 100 110 Q75 110 75 80"
+          fill="#FFFDF8"
+          stroke="#171912"
+          strokeWidth="2.5"
+        />
 
-        {/* Head Group (Overlapping Action) */}
-        <motion.g
-          animate={{
-            y: mood === "stressed" ? [0, 4, 0] : [0, -2, 0],
-            rotate: mood === "stressed" ? [-1, 1, -1] : 0,
-          }}
-          transition={organicTransition}
-        >
-          {/* Main Face Path (Organic Silhouette) */}
-          <path
-            d="M80 110 Q80 50 120 50 Q160 50 160 110 Q160 180 120 180 Q80 180 80 110"
-            fill="url(#skinGrad)"
-            filter="url(#softShadow)"
-          />
-
-          {/* Hair (Secondary Action - Sway) */}
+        {/* Face Details */}
+        <g transform="translate(100, 85)">
+          {/* Eyes */}
+          <circle cx="-12" cy="0" r="1.5" fill="#171912" />
+          <circle cx="12" cy="0" r="1.5" fill="#171912" />
+          {/* Mouth */}
           <motion.path
             animate={{
-              rotate: mood === "stressed" ? [0, -2, 2, 0] : [0, 1, -1, 0],
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            d="M75 100 Q70 40 120 35 Q170 40 165 100 Q175 120 165 140 Q150 90 120 90 Q90 90 75 140"
-            fill="#171912"
-          />
-          <motion.circle 
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={organicTransition}
-            cx="120" cy="35" r="18" fill="#171912" 
-          />
-
-          {/* Eyes (Expressive Features) */}
-          <g transform="translate(120, 115)">
-            {/* Left Eye */}
-            <g transform="translate(-22, 0)">
-              <motion.ellipse
-                animate={{ scaleY: mood === "stressed" ? [1, 0.2, 1] : [1, 0.1, 1] }}
-                transition={{ repeat: Infinity, duration: 4, delay: 1 }}
-                rx="7" ry="9" fill="#171912"
-              />
-              <circle cx="2" cy="-3" r="2" fill="white" opacity="0.8" />
-              {mood === "stressed" && (
-                <path d="M-10 -14 Q-5 -17 0 -14" fill="none" stroke="#171912" strokeWidth="2" strokeLinecap="round" />
-              )}
-            </g>
-            {/* Right Eye */}
-            <g transform="translate(22, 0)">
-              <motion.ellipse
-                animate={{ scaleY: mood === "stressed" ? [1, 0.2, 1] : [1, 0.1, 1] }}
-                transition={{ repeat: Infinity, duration: 4, delay: 1.1 }}
-                rx="7" ry="9" fill="#171912"
-              />
-              <circle cx="2" cy="-3" r="2" fill="white" opacity="0.8" />
-              {mood === "stressed" && (
-                <path d="M0 -14 Q5 -17 10 -14" fill="none" stroke="#171912" strokeWidth="2" strokeLinecap="round" />
-              )}
-            </g>
-          </g>
-
-          {/* Mouth (Exaggeration) */}
-          <motion.path
-            animate={{
-              d: mood === "hero" 
-                ? "M105 145 Q120 165 135 145" 
-                : mood === "stressed" 
-                  ? "M108 155 Q120 150 132 155" 
-                  : "M110 155 L130 155",
+              d: mood === "triumphant" ? "M-5 12 Q0 18 5 12" : "M-4 15 L4 15",
             }}
             fill="none"
             stroke="#171912"
-            strokeWidth="3"
+            strokeWidth="2"
             strokeLinecap="round"
           />
-        </motion.g>
-      </svg>
+        </g>
 
-      {/* Particles (Success State) */}
-      {mood === "hero" && (
-        <div className="absolute inset-0 pointer-events-none">
-          {[...Array(6)].map((_, i) => (
-            <motion.div
-              key={i}
-              initial={{ scale: 0, x: "50%", y: "50%" }}
-              animate={{
-                scale: [0, 1, 0],
-                x: `${50 + (Math.cos(i * 60) * 40)}%`,
-                y: `${50 + (Math.sin(i * 60) * 40)}%`,
-              }}
-              transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
-              className="absolute size-2 rounded-full bg-[#c8f85a]"
-            />
-          ))}
-        </div>
-      )}
+        {/* Torso - Oversized Sweater */}
+        <motion.path
+          animate={{ scaleY: [1, 1.02, 1] }}
+          transition={bodyTransition}
+          d="M70 120 Q100 110 130 120 L150 180 Q100 200 50 180 Z"
+          fill="#5C90D2"
+          stroke="#171912"
+          strokeWidth="2.5"
+        />
+
+        {/* Left Arm (Fixed on hip) */}
+        <path
+          d="M70 135 Q50 150 65 185"
+          fill="none"
+          stroke="#171912"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+
+        {/* Right Arm (Dynamic) */}
+        <motion.path
+          animate={{
+            d: armRaised 
+              ? "M130 135 Q180 110 200 80" 
+              : mood === "stressed"
+                ? "M130 135 Q150 170 140 200"
+                : "M130 135 Q160 160 155 190"
+          }}
+          transition={{ type: "spring", stiffness: 60, damping: 10 }}
+          fill="none"
+          stroke="#171912"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
+
+        {/* Legs - Long and thin */}
+        <g stroke="#171912" strokeWidth="2.5" strokeLinecap="round">
+          {/* Left Leg */}
+          <motion.path
+            animate={{ d: mood === "stressed" ? "M75 190 L65 240" : "M80 195 L75 250" }}
+            transition={bodyTransition}
+          />
+          {/* Right Leg */}
+          <motion.path
+            animate={{ d: mood === "stressed" ? "M125 190 L135 240" : "M120 195 L125 250" }}
+            transition={bodyTransition}
+          />
+        </g>
+
+        {/* Tools (Holding a brush when raised) */}
+        <AnimatePresence>
+          {armRaised && (
+            <motion.g
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1, x: 195, y: 75 }}
+              exit={{ opacity: 0, scale: 0 }}
+            >
+              <path
+                d="M0 0 L15 -15 M15 -15 Q20 -20 25 -15 L35 -5 Q40 0 35 5 Z"
+                fill="#FFFDF8"
+                stroke="#171912"
+                strokeWidth="2"
+              />
+              <path d="M15 -15 L25 -5" stroke="#171912" strokeWidth="2" />
+              {/* Brush Tip */}
+              <motion.path
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                d="M30 0 Q35 10 40 0 Q35 -5 30 0"
+                fill="#F1935C"
+              />
+            </motion.g>
+          )}
+        </AnimatePresence>
+      </svg>
     </div>
   );
 }
@@ -204,39 +187,42 @@ function StruggleView() {
       exit={{ opacity: 0, scale: 1.05 }}
       className="flex flex-col items-center gap-10"
     >
-      <div className="relative">
-        <DisneyCharacter mood="stressed" />
+      <div className="relative flex items-center justify-center">
+        <HumaaanCharacter mood="stressed" />
         
-        {/* Floating Stressors (Harmonic Orbit) */}
-        <FloatingBadge delay={0} x={-110} y={-60}>
-          <div className="rounded-2xl border-2 border-[#171912] bg-white p-4 shadow-[6px_6px_0_#171912]">
-            <X size={28} className="text-[#ff8b5e]" strokeWidth={4} />
+        {/* Messy Windows (Matching Screenshot) */}
+        <motion.div
+          animate={{ x: -140, y: -40, rotate: -12 }}
+          className="absolute rounded-xl border-2 border-[#171912] bg-white p-2 shadow-[6px_6px_0_#171912]"
+        >
+          <div className="flex h-32 w-48 flex-col gap-2 p-2">
+            <div className="h-3 w-3/4 rounded-full bg-[#171912]/10" />
+            <div className="h-3 w-full rounded-full bg-[#171912]/10" />
+            <div className="mt-auto flex justify-between">
+              <div className="size-8 rounded-lg bg-[#F1935C]/20" />
+              <X size={20} className="text-[#F1935C]" strokeWidth={3} />
+            </div>
           </div>
-        </FloatingBadge>
+        </motion.div>
 
-        <FloatingBadge delay={0.3} x={120} y={-20}>
-          <div className="rounded-2xl border-2 border-[#171912] bg-white px-5 py-3 shadow-[6px_6px_0_#171912]">
-            <span className="text-xs font-black uppercase italic tracking-tighter">Drafting...</span>
+        <motion.div
+          animate={{ x: 140, y: 60, rotate: 8 }}
+          className="absolute rounded-xl border-2 border-[#171912] bg-[#FFFDF8] p-2 shadow-[6px_6px_0_#F1935C]"
+        >
+          <div className="flex h-24 w-40 flex-col gap-2 p-3">
+            <div className="flex gap-2">
+              <div className="size-3 rounded-full bg-[#171912]" />
+              <div className="h-3 w-12 rounded-full bg-[#171912]/20" />
+            </div>
+            <div className="h-2 w-full rounded-full bg-[#171912]/10" />
+            <div className="h-2 w-2/3 rounded-full bg-[#171912]/10" />
           </div>
-        </FloatingBadge>
-
-        <FloatingBadge delay={0.6} x={-40} y={130}>
-          <div className="rounded-2xl border-2 border-[#171912] bg-[#171912] px-5 py-3 text-white shadow-[6px_6px_0_#ff8b5e]">
-            <span className="text-xs font-black">LATE NIGHT</span>
-          </div>
-        </FloatingBadge>
+        </motion.div>
       </div>
 
       <div className="text-center">
-        <div className="mb-3 h-2 w-56 overflow-hidden rounded-full bg-[#171912]/5">
-          <motion.div
-            animate={{ x: ["-100%", "100%"] }}
-            transition={{ repeat: Infinity, duration: 1.8, ease: "linear" }}
-            className="h-full w-full bg-[#ff8b5e]/40"
-          />
-        </div>
-        <p className="text-[11px] font-black uppercase tracking-[0.4em] text-[#6c7065]/60">
-          Stuck in the loop
+        <p className="text-sm font-black uppercase tracking-[0.4em] text-[#171912]/40">
+          Unorganized draft
         </p>
       </div>
     </motion.div>
@@ -251,51 +237,52 @@ function FixingView() {
       exit={{ opacity: 0 }}
       className="flex flex-col items-center gap-12"
     >
-      <div className="relative">
-        <DisneyCharacter mood="analyzing" />
+      <div className="relative flex items-center justify-center">
+        <HumaaanCharacter mood="focused" armRaised />
         
-        {/* Analysis HUD (Layered Depth) */}
+        {/* Active Drawing Window */}
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="absolute inset-0 flex items-center justify-center"
+          initial={{ opacity: 0, scale: 0.8, x: 140, y: -80 }}
+          animate={{ opacity: 1, scale: 1, x: 120, y: -100, rotate: 2 }}
+          className="absolute rounded-2xl border-[3px] border-[#171912] bg-white p-4 shadow-2xl"
         >
-          <div className="relative h-72 w-96 rotate-[-2deg] overflow-hidden rounded-[32px] border-[3px] border-[#171912] bg-white/30 shadow-2xl backdrop-blur-xl">
-            <div className="space-y-5 p-10">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex gap-4">
-                  <motion.div 
-                    initial={{ width: 0 }}
-                    animate={{ width: `${60 + (i * 7) % 30}%` }}
-                    transition={{ delay: i * 0.15, duration: 1 }}
-                    className="h-2.5 rounded-full bg-[#171912]/15" 
-                  />
-                  {i % 2 === 0 && <div className="size-2.5 rounded-full bg-[#c8f85a]" />}
-                </div>
-              ))}
-            </div>
-
-            {/* Magic Scan Beam */}
-            <motion.div
-              animate={{ y: [-40, 300] }}
-              transition={{ repeat: Infinity, duration: 2.5, ease: [0.45, 0.05, 0.55, 0.95] }}
-              className="absolute inset-x-0 h-16 bg-gradient-to-b from-transparent via-[#c8f85a]/40 to-transparent"
-            />
-
-            <div className="absolute inset-0 flex items-center justify-center">
-              <motion.div 
-                animate={{ scale: [1, 1.1, 1] }}
+          <div className="relative h-40 w-64 overflow-hidden rounded-lg bg-[#5C90D2]/10">
+            {/* The "Drawing" Path */}
+            <motion.svg className="absolute inset-0 h-full w-full">
+              <motion.path
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="flex items-center gap-4 rounded-full border-[3px] border-[#171912] bg-[#171912] px-8 py-4 text-white shadow-xl"
-              >
-                <Zap size={22} className="text-[#c8f85a]" fill="currentColor" />
-                <span className="text-[13px] font-black uppercase tracking-[0.25em]">
-                  Analyzing
-                </span>
-              </motion.div>
+                d="M30 80 Q100 20 140 100 Q180 180 230 80"
+                fill="none"
+                stroke="#171912"
+                strokeWidth="3"
+                strokeDasharray="5 5"
+              />
+            </motion.svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Sparkles className="animate-pulse text-[#F1935C]" size={48} />
             </div>
           </div>
         </motion.div>
+
+        {/* Floating Folder (Matching Screenshot) */}
+        <motion.div
+          initial={{ opacity: 0, x: -120, y: 100 }}
+          animate={{ opacity: 1, x: -140, y: 120, rotate: -5 }}
+          className="absolute flex h-24 w-32 items-end justify-center rounded-xl border-2 border-[#171912] bg-[#5C90D2] shadow-[6px_6px_0_#171912]"
+        >
+          <div className="mb-2 h-2 w-16 rounded-full bg-white/40" />
+        </motion.div>
+      </div>
+
+      <div className="text-center">
+        <div className="flex items-center gap-4 rounded-full border-2 border-[#171912] bg-[#171912] px-6 py-2.5 text-white">
+          <Zap size={18} className="text-[#F1935C]" fill="currentColor" />
+          <span className="text-xs font-black uppercase tracking-[0.2em]">
+            Revising logic...
+          </span>
+        </div>
       </div>
     </motion.div>
   );
@@ -307,80 +294,54 @@ function SuccessView() {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 1.1 }}
-      className="flex flex-col items-center gap-10"
+      className="flex flex-col items-center gap-12"
     >
-      <div className="relative">
-        <DisneyCharacter mood="hero" />
+      <div className="relative flex items-center justify-center">
+        <HumaaanCharacter mood="triumphant" />
         
-        {/* Victory Badges */}
+        {/* Organized State */}
         <motion.div
-          initial={{ y: 30, opacity: 0, rotate: 15 }}
-          animate={{ y: 0, opacity: 1, rotate: 8 }}
-          transition={{ type: "spring", delay: 0.4, stiffness: 100 }}
-          className="absolute -right-12 -top-6 rounded-3xl border-[3px] border-[#171912] bg-[#c8f85a] px-7 py-4 shadow-[8px_8px_0_#171912]"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0, x: -150, rotate: -8 }}
+          className="absolute rounded-2xl border-2 border-[#171912] bg-[#C8F85A] px-6 py-4 shadow-[8px_8px_0_#171912]"
         >
           <div className="flex items-center gap-3">
-            <Sparkles size={24} className="text-[#171912]" />
-            <strong className="text-3xl font-black italic">98</strong>
+            <Check size={28} className="text-[#171912]" strokeWidth={4} />
+            <strong className="text-3xl font-black">98%</strong>
           </div>
         </motion.div>
 
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", delay: 0.6, damping: 12 }}
-          className="absolute -left-14 top-1/2 size-20 -translate-y-1/2 rounded-full border-[3px] border-[#171912] bg-white p-4 shadow-2xl"
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1, x: 150, y: 80, rotate: 12 }}
+          className="absolute rounded-2xl border-2 border-[#171912] bg-white p-4 shadow-[8px_8px_0_#5C90D2]"
         >
-          <div className="flex h-full w-full items-center justify-center rounded-full bg-[#eff9d4]">
-            <Check size={32} className="text-[#566b18]" strokeWidth={5} />
+          <div className="flex items-center gap-3 font-black uppercase">
+            <Sparkles size={20} className="text-[#F1935C]" />
+            Perfect match
           </div>
         </motion.div>
+
+        {/* Floating Confetti Shapes */}
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            animate={{ 
+              y: [0, -100], 
+              opacity: [0, 1, 0],
+              x: (i - 3) * 60
+            }}
+            transition={{ duration: 3, repeat: Infinity, delay: i * 0.2 }}
+            className="absolute size-3 rounded-full bg-[#F1935C]"
+          />
+        ))}
       </div>
 
       <div className="text-center">
-        <p className="text-base font-black uppercase tracking-[0.4em] text-[#171912]">
-          Submission Ready
-        </p>
-        <p className="mt-2 text-[11px] font-bold tracking-wider text-[#6c7065]">
-          A-LEVEL DRAFT VERIFIED
+        <p className="text-base font-black uppercase tracking-[0.5em] text-[#171912]">
+          Ready to submit
         </p>
       </div>
-    </motion.div>
-  );
-}
-
-function FloatingBadge({
-  children,
-  x,
-  y,
-  delay,
-}: {
-  children: React.ReactNode;
-  x: number;
-  y: number;
-  delay: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 0, y: 0 }}
-      animate={{
-        opacity: 1,
-        x,
-        y,
-        transition: { delay, type: "spring", stiffness: 80, damping: 15 },
-      }}
-      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-    >
-      <motion.div
-        animate={{ 
-          y: [0, -12, 0], 
-          rotate: [-3, 3, -3],
-          scale: [1, 1.02, 1]
-        }}
-        transition={{ duration: 4, repeat: Infinity, delay, ease: "easeInOut" }}
-      >
-        {children}
-      </motion.div>
     </motion.div>
   );
 }
