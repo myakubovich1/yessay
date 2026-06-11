@@ -5,11 +5,14 @@ import { motion, useReducedMotion } from "framer-motion";
 
 /**
  * One continuous scene, three beats:
- *   struggle — slumped over a messy draft, issue marks hovering
+ *   struggle — slumped over a messy draft, hand buried in hair
  *   scan     — sits up, a lime beam sweeps the page, scribbles straighten
- *   done     — score ring pops, checks land, smile, sparkles
- * Persistent elements (person, desk, page) transform in place; nothing
- * hard-swaps. Transforms and opacity only; honors prefers-reduced-motion.
+ *   done     — chin up, arms in a V, score ring pops, sparkles
+ *
+ * The figure follows premium flat-illustration conventions: faceless
+ * profile (emotion lives in the silhouette), no outlines on the body,
+ * two-tone skin for depth, capsule limbs with real elbow joints.
+ * Transforms and opacity only; honors prefers-reduced-motion.
  */
 
 type Beat = "struggle" | "scan" | "done";
@@ -27,20 +30,91 @@ const NEXT: Record<Beat, Beat> = {
 
 const INK = "#171912";
 const LIME = "#c8f85a";
-const SKIN = "#eec39a";
 const PAPER = "#fffdf8";
 const MUTED = "#a9ad9e";
 const ORANGE = "#ff8b5e";
 const OLIVE = "#617c12";
 
+const SKIN = "#e9b482";
+const SKIN_SHADE = "#cf9a63";
+const SHIRT = "#5a7117";
+const SHIRT_SHADE = "#475a0c";
+
 const spring = { type: "spring" as const, stiffness: 260, damping: 20 };
 const soft = { duration: 0.7, ease: [0.32, 0.72, 0, 1] as const };
+const fade = { duration: 0.28 };
 
 const CAPTIONS: Record<Beat, string> = {
   struggle: "Stuck on the draft",
   scan: "Scanning the draft",
   done: "Ready to submit",
 };
+
+type ArmPose = {
+  elbow: [number, number];
+  wrist: [number, number];
+  hand: [number, number];
+};
+
+const NEAR_SHOULDER: [number, number] = [190, 306];
+const FAR_SHOULDER: [number, number] = [160, 308];
+
+const NEAR_ARM: Record<Beat, ArmPose> = {
+  struggle: { elbow: [254, 384], wrist: [232, 258], hand: [226, 246] },
+  scan: { elbow: [234, 352], wrist: [274, 387], hand: [283, 389] },
+  done: { elbow: [238, 254], wrist: [252, 202], hand: [256, 190] },
+};
+const FAR_ARM: Record<Beat, ArmPose> = {
+  struggle: { elbow: [180, 366], wrist: [252, 390], hand: [262, 392] },
+  scan: { elbow: [176, 362], wrist: [240, 390], hand: [250, 392] },
+  done: { elbow: [118, 258], wrist: [104, 206], hand: [102, 194] },
+};
+
+function Arm({
+  shoulder,
+  pose,
+  visible,
+  skin,
+  sleeve,
+}: {
+  shoulder: [number, number];
+  pose: ArmPose;
+  visible: boolean;
+  skin: string;
+  sleeve: string;
+}) {
+  const [sx, sy] = shoulder;
+  const [ex, ey] = pose.elbow;
+  const [wx, wy] = pose.wrist;
+  const [hx, hy] = pose.hand;
+  // sleeve covers the first stretch of the upper arm
+  const slx = sx + (ex - sx) * 0.42;
+  const sly = sy + (ey - sy) * 0.42;
+  return (
+    <motion.g
+      initial={false}
+      animate={{ opacity: visible ? 1 : 0 }}
+      transition={fade}
+    >
+      <path
+        d={`M${sx} ${sy} L${ex} ${ey} L${wx} ${wy}`}
+        fill="none"
+        stroke={skin}
+        strokeWidth="16"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx={hx} cy={hy} r="9.5" fill={skin} />
+      <path
+        d={`M${sx} ${sy} L${slx} ${sly}`}
+        fill="none"
+        stroke={sleeve}
+        strokeWidth="20"
+        strokeLinecap="round"
+      />
+    </motion.g>
+  );
+}
 
 export function RevisionAnimation() {
   const reduced = useReducedMotion();
@@ -261,169 +335,89 @@ export function RevisionAnimation() {
           />
         ))}
 
-        {/* ---------- character ---------- */}
+        {/* ---------- character (faceless profile, no outlines) ---------- */}
         <motion.g
           initial={false}
           animate={{
-            rotate: is("struggle") ? 5 : is("done") ? -2 : 0,
-            y: is("struggle") ? 9 : 0,
+            rotate: is("struggle") ? 7 : is("done") ? -5 : 1,
+            y: is("struggle") ? 7 : 0,
+            x: -14,
             transition: { ...spring, damping: 16 },
           }}
-          style={{ originX: "150px", originY: "404px" }}
+          style={{ originX: "158px", originY: "396px" }}
         >
           {/* breathing */}
           <motion.g
             animate={reduced ? { y: 0 } : { y: [0, -3, 0] }}
             transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
           >
+            {/* far arm (shaded, behind torso) */}
+            {(Object.keys(FAR_ARM) as Beat[]).map((b) => (
+              <Arm
+                key={b}
+                shoulder={FAR_SHOULDER}
+                pose={FAR_ARM[b]}
+                visible={beat === b}
+                skin={SKIN_SHADE}
+                sleeve={SHIRT_SHADE}
+              />
+            ))}
+
             {/* torso */}
             <path
-              d="M108 404 L108 322 q0 -42 42 -42 q42 0 42 42 L192 404 Z"
-              fill={LIME}
-              stroke={INK}
-              strokeWidth="3"
+              d="M124 396 C118 342 130 306 158 294 C188 281 207 296 206 324 C205 350 206 372 208 396 Z"
+              fill={SHIRT}
             />
-            {/* collar */}
-            <path d="M134 286 q16 12 32 0" fill="none" stroke={INK} strokeWidth="3" strokeLinecap="round" />
 
             {/* head group (tilts per beat) */}
             <motion.g
               initial={false}
               animate={{
-                rotate: is("struggle") ? 7 : is("done") ? -4 : 0,
+                rotate: is("struggle") ? 14 : is("done") ? -8 : 0,
                 transition: { ...spring, damping: 15 },
               }}
-              style={{ originX: "150px", originY: "284px" }}
+              style={{ originX: "184px", originY: "298px" }}
             >
               {/* neck */}
-              <rect x="140" y="262" width="20" height="26" fill={SKIN} stroke={INK} strokeWidth="3" />
-              {/* head */}
-              <circle cx="152" cy="226" r="37" fill={SKIN} stroke={INK} strokeWidth="3" />
-              {/* hair */}
+              <path d="M172 302 L174 260 L196 260 L196 302 Z" fill={SKIN} />
+              {/* head in profile, facing right (nose in silhouette) */}
               <path
-                d="M116 219 q-2 -32 36 -32 q34 0 36 26 q-20 -12 -38 -8 q-22 5 -34 14 Z"
-                fill={INK}
+                d="M152 230
+                   C152 204 166 190 186 190
+                   C206 190 219 204 220 224
+                   L231 240
+                   L220 247
+                   C218 261 207 269 192 269
+                   L182 269
+                   C164 269 152 252 152 230 Z"
+                fill={SKIN}
               />
               {/* ear */}
-              <circle cx="124" cy="230" r="6.5" fill={SKIN} stroke={INK} strokeWidth="2.5" />
-
-              {/* eyes (blink) */}
-              <motion.g
-                animate={reduced ? { scaleY: 1 } : { scaleY: [1, 1, 0.08, 1, 1] }}
-                transition={{ duration: 3.4, times: [0, 0.46, 0.5, 0.54, 1], repeat: Infinity }}
-                style={{ originX: "165px", originY: "224px" }}
-              >
-                <circle cx="158" cy="224" r="3.2" fill={INK} />
-                <circle cx="180" cy="224" r="3.2" fill={INK} />
-              </motion.g>
-
-              {/* brows */}
-              <motion.g
-                initial={false}
-                animate={{ opacity: is("struggle") ? 1 : 0 }}
-                transition={{ duration: 0.4 }}
-              >
-                <path d="M152 213 l11 4" stroke={INK} strokeWidth="3" strokeLinecap="round" />
-                <path d="M186 217 l-11 -4 " stroke={INK} strokeWidth="3" strokeLinecap="round" />
-              </motion.g>
-              <motion.g
-                initial={false}
-                animate={{ opacity: is("struggle") ? 0 : 1 }}
-                transition={{ duration: 0.4 }}
-              >
-                <path d="M152 214 q6 -4 12 0" stroke={INK} strokeWidth="3" strokeLinecap="round" fill="none" />
-                <path d="M174 214 q6 -4 12 0" stroke={INK} strokeWidth="3" strokeLinecap="round" fill="none" />
-              </motion.g>
-
-              {/* mouths */}
-              <motion.path
-                d="M162 246 q7 -6 14 0"
-                stroke={INK}
-                strokeWidth="3"
-                strokeLinecap="round"
-                fill="none"
-                initial={false}
-                animate={{ opacity: is("struggle") ? 1 : 0 }}
-                transition={{ duration: 0.35 }}
+              <ellipse cx="184" cy="238" rx="5.5" ry="7.5" fill={SKIN_SHADE} />
+              {/* hair sweep + bun */}
+              <path
+                d="M150 242
+                   C142 204 164 184 190 187
+                   C208 189 218 200 220 216
+                   C206 206 190 204 176 211
+                   C160 219 152 229 150 242 Z"
+                fill={INK}
               />
-              <motion.path
-                d="M162 244 q7 4 14 0"
-                stroke={INK}
-                strokeWidth="3"
-                strokeLinecap="round"
-                fill="none"
-                initial={false}
-                animate={{ opacity: is("scan") ? 1 : 0 }}
-                transition={{ duration: 0.35 }}
-              />
-              <motion.path
-                d="M158 242 q11 12 22 0"
-                stroke={INK}
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                fill="none"
-                initial={false}
-                animate={{ opacity: is("done") ? 1 : 0 }}
-                transition={{ duration: 0.35 }}
-              />
+              <circle cx="145" cy="212" r="12" fill={INK} />
             </motion.g>
 
-            {/* arm resting on desk (always) */}
-            <path
-              d="M118 318 Q104 366 150 392"
-              fill="none"
-              stroke={SKIN}
-              strokeWidth="13"
-              strokeLinecap="round"
-            />
-
-            {/* arm propping head (struggle) */}
-            <motion.path
-              d="M186 322 Q226 330 196 262"
-              fill="none"
-              stroke={SKIN}
-              strokeWidth="13"
-              strokeLinecap="round"
-              initial={false}
-              animate={{ opacity: is("struggle") ? 1 : 0 }}
-              transition={{ duration: 0.3 }}
-            />
-            {/* arm on desk (scan) */}
-            <motion.path
-              d="M186 322 Q214 360 252 388"
-              fill="none"
-              stroke={SKIN}
-              strokeWidth="13"
-              strokeLinecap="round"
-              initial={false}
-              animate={{ opacity: is("scan") ? 1 : 0 }}
-              transition={{ duration: 0.3 }}
-            />
-            {/* fist pump (done) */}
-            <motion.g
-              initial={false}
-              animate={{ opacity: is("done") ? 1 : 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <motion.g
-                initial={false}
-                animate={
-                  is("done")
-                    ? { rotate: [14, -6, 6, 0], transition: { delay: 0.2, duration: 0.9, ease: "easeOut" } }
-                    : {}
-                }
-                style={{ originX: "190px", originY: "322px" }}
-              >
-                <path
-                  d="M186 322 Q230 312 238 268"
-                  fill="none"
-                  stroke={SKIN}
-                  strokeWidth="13"
-                  strokeLinecap="round"
-                />
-                <circle cx="240" cy="260" r="11" fill={SKIN} stroke={INK} strokeWidth="2.5" />
-              </motion.g>
-            </motion.g>
+            {/* near arm (in front of torso; shaded when propping the head
+                so the forearm separates from the face) */}
+            {(Object.keys(NEAR_ARM) as Beat[]).map((b) => (
+              <Arm
+                key={b}
+                shoulder={NEAR_SHOULDER}
+                pose={NEAR_ARM[b]}
+                visible={beat === b}
+                skin={b === "struggle" ? SKIN_SHADE : SKIN}
+                sleeve={SHIRT}
+              />
+            ))}
           </motion.g>
         </motion.g>
 
@@ -437,13 +431,13 @@ export function RevisionAnimation() {
           }
         >
           <path
-            d="M196 156 q8 -10 16 0 t16 0"
+            d="M178 152 q8 -10 16 0 t16 0"
             fill="none"
             stroke={ORANGE}
             strokeWidth="4"
             strokeLinecap="round"
           />
-          <circle cx="238" cy="150" r="3" fill={ORANGE} />
+          <circle cx="220" cy="146" r="3" fill={ORANGE} />
         </motion.g>
 
         {/* ---------- desk (in front of character) ---------- */}
