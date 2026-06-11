@@ -14,6 +14,7 @@ type VerificationState =
       product: PricingProduct;
       reportId?: string;
       demo: boolean;
+      via?: "demo" | "promo";
     }
   | { status: "error"; message: string };
 
@@ -44,6 +45,7 @@ export function SuccessView({
               product: PricingProduct;
               reportId?: string;
               demo: boolean;
+              via?: "demo" | "promo";
             }
           | { error: string };
         if (!response.ok || "error" in data) {
@@ -129,7 +131,11 @@ export function SuccessView({
         <Check size={25} strokeWidth={2.5} />
       </span>
       <p className="eyebrow mt-6">
-        {verification.demo ? "Demo checkout complete" : "Payment confirmed"}
+        {verification.via === "promo"
+          ? "Promo code redeemed"
+          : verification.demo
+            ? "Demo checkout complete"
+            : "Payment confirmed"}
       </p>
       <h1 className="mt-4 text-4xl font-black tracking-[-0.05em] text-[#171912]">
         You&apos;re unlocked.

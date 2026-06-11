@@ -7,6 +7,7 @@ type DemoCheckoutGrant = {
   product: PricingProduct;
   reportId?: string;
   expiresAt: number;
+  via?: "demo" | "promo";
 };
 
 function getSigningSecret() {
@@ -32,12 +33,14 @@ function signPayload(payload: string) {
 export function createDemoCheckoutToken(
   product: PricingProduct,
   reportId?: string,
+  via: "demo" | "promo" = "demo",
 ) {
   const payload = Buffer.from(
     JSON.stringify({
       product,
       reportId,
       expiresAt: Date.now() + 15 * 60 * 1000,
+      via,
     } satisfies DemoCheckoutGrant),
   ).toString("base64url");
 

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CheckCircle2, ShieldCheck } from "lucide-react";
 import { PricingGrid } from "@/components/marketing/pricing-grid";
+import { PromoCodeForm } from "@/components/marketing/promo-code-form";
 import { Footer } from "@/components/shared/footer";
 import { GradientBackground } from "@/components/shared/gradient-background";
 
@@ -30,6 +31,8 @@ export default function PricingPage() {
         <div className="mt-12">
           <PricingGrid />
         </div>
+
+        <PromoCodeForm />
 
         <div className="mx-auto mt-8 flex max-w-2xl flex-col justify-center gap-3 text-sm font-semibold text-[#5f6359] sm:flex-row sm:gap-8">
           <span className="flex items-center gap-2">
