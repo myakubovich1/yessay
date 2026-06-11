@@ -3,7 +3,6 @@ import {
   ArrowRight,
   BookOpenCheck,
   Check,
-  CheckCircle2,
   FileSearch,
   ScanSearch,
   Sparkles,
@@ -16,6 +15,7 @@ import { HeroMockup } from "@/components/marketing/hero-mockup";
 import { PricingCard } from "@/components/marketing/pricing-card";
 import { PricingPreview } from "@/components/marketing/pricing-preview";
 import { ReportAnimation } from "@/components/marketing/report-animation";
+import { RevisionAnimation } from "@/components/marketing/revision-animation";
 import {
   WorkflowAnimation,
   type WorkflowAnimationKind,
@@ -265,13 +265,8 @@ export default function Home() {
                 <ArrowRight size={17} />
               </Link>
             </div>
-            <div className="hidden min-w-80 items-center justify-center border-l border-[#171912] bg-[#fffdf8] p-10 lg:flex">
-              <div className="relative flex size-48 items-center justify-center rounded-full border-[16px] border-[#171912]">
-                <CheckCircle2 size={72} strokeWidth={2.4} />
-                <span className="absolute -right-5 -top-3 flex size-14 items-center justify-center rounded-full border border-[#171912] bg-[#ff8b5e]">
-                  <Sparkles size={24} />
-                </span>
-              </div>
+            <div className="hidden min-w-[340px] items-center justify-center border-l border-[#171912] bg-[#fffdf8] lg:flex">
+              <RevisionAnimation />
             </div>
           </div>
           <div className="mt-8">
