@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { LoaderCircle, TicketPercent } from "lucide-react";
+import { getReports } from "@/lib/storage/local-reports";
 
 export function PromoCodeForm() {
   const [code, setCode] = useState("");
@@ -15,10 +16,11 @@ export function PromoCodeForm() {
     setLoading(true);
     setError("");
     try {
+      const lockedReportId = getReports().find((report) => report.locked)?.id;
       const response = await fetch("/api/redeem-promo-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: code.trim() }),
+        body: JSON.stringify({ code: code.trim(), reportId: lockedReportId }),
       });
       const data = (await response.json()) as { url?: string; error?: string };
       if (!response.ok || !data.url) {

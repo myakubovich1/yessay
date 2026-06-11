@@ -42,7 +42,10 @@ export function PricingGrid() {
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ product }),
+        body: JSON.stringify({
+          product,
+          reportId: lockedReportId || undefined,
+        }),
       });
       const data = (await response.json()) as { url?: string; error?: string };
       if (!response.ok || !data.url) {

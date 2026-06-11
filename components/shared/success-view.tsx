@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AlertTriangle, ArrowRight, Check, LoaderCircle } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { grantAccess } from "@/lib/storage/local-access";
+import { getReports } from "@/lib/storage/local-reports";
 import type { PricingProduct } from "@/lib/types";
 
 type VerificationState =
@@ -55,7 +56,14 @@ export function SuccessView({
         }
 
         grantAccess(data.product, data.reportId);
-        setVerification({ status: "success", ...data });
+        // Subscriptions unlock every saved report; land on the latest one
+        // instead of sending the buyer back through the check form.
+        const reportId =
+          data.reportId ||
+          (data.product !== "single_report"
+            ? getReports()[0]?.id
+            : undefined);
+        setVerification({ status: "success", ...data, reportId });
       } catch (error) {
         if (controller.signal.aborted) return;
         setVerification({
