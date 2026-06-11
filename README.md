@@ -1,36 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Yessay
 
-## Getting Started
+Yessay is a production-ready MVP for checking a student's own essay draft
+against an assignment prompt and rubric before submission.
 
-First, run the development server:
+## Run locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Useful checks:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run lint
+npm run test:analysis
+npm run typecheck
+npm run build
+```
 
-## Learn More
+## Demo mode
 
-To learn more about Next.js, take a look at the following resources:
+The app works without external credentials:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `/api/analyze` uses deterministic checks based on length, prompt keywords,
+  citations, thesis signals, paragraph structure, and conclusion signals.
+- Prompt, rubric, and draft screenshots can be converted to editable text with
+  local Tesseract OCR before analysis.
+- Reports are saved in browser `localStorage`.
+- Checkout redirects to `/success?demo=true` and unlocks the relevant report.
+- `/report/sample-report` provides an immediate full example.
+- `/check` includes a **Use sample** action for end-to-end testing.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Environment variables
 
-## Deploy on Vercel
+Copy the safe template, then add your server-side credentials:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+cp .env.example .env.local
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For OpenAI analysis, set:
+
+```bash
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-5.4-mini
+```
+
+Never expose `OPENAI_API_KEY` through a `NEXT_PUBLIC_` variable or commit
+`.env.local`. Restart `npm run dev` after changing environment variables.
+
+The remaining optional variables are:
+
+```bash
+STRIPE_SECRET_KEY=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_SINGLE_REPORT_PRICE_ID=
+STRIPE_SINGLE_REPORT_PRICE_ID_699=
+STRIPE_SINGLE_REPORT_PRICE_ID_799=
+STRIPE_SINGLE_REPORT_PRICE_ID_999=
+STRIPE_FINALS_PASS_PRICE_ID=
+STRIPE_MONTHLY_PRICE_ID=
+STRIPE_ANNUAL_PRICE_ID=
+NEXT_PUBLIC_SINGLE_REPORT_PRICE_VARIANT=799
+CHECKOUT_DEMO_SECRET=
+
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+When `OPENAI_API_KEY` is present, the app uses the OpenAI Responses API with a
+strict Zod-backed structured output schema. The model returns grounded
+performance levels and report text; Yessay deterministically converts those
+levels into score percentages, caps scores for high-risk missing requirements,
+and keeps source/citation criteria marked as not applicable when the assignment
+does not require them. If the OpenAI call fails, the route automatically returns
+the deterministic fallback and marks the report as a local fallback review.
+
+The analysis regression suite covers deterministic score mapping, citation
+applicability, missing-requirement caps, due-tonight planning, deduplication,
+and formatting-warning filtering:
+
+```bash
+npm run test:analysis
+```
+
+When Stripe and the matching price ID are present, checkout uses a real Stripe
+Checkout session. The success page verifies the session server-side before
+granting access. Without Stripe configuration, development checkout uses a
+short-lived signed demo token; set `CHECKOUT_DEMO_SECRET` outside local
+development.
+
+The single-report price is deployment-configurable for price testing:
+`NEXT_PUBLIC_SINGLE_REPORT_PRICE_VARIANT=699`, `799`, or `999`. Configure the
+matching Stripe price ID for each active test cell. The default variant is
+`799` ($7.99).
+
+Supabase environment variables are reserved for replacing the local storage
+adapter with authenticated cloud persistence. The current MVP intentionally
+keeps local storage as the working default.
+
+## Routes
+
+- `/` - marketing page
+- `/check` - three-step essay check
+- `/report/[id]` - saved report or locked preview
+- `/report/sample-report` - full example report
+- `/pricing` - pricing and checkout
+- `/dashboard` - reports saved in this browser
+- `/success` - checkout completion
+- `/terms` and `/privacy` - launch placeholders
+
+## Academic integrity
+
+Yessay is designed for revision guidance. It does not generate full essays,
+promise grades, or provide text intended to be submitted as a replacement for
+the student's own work.
