@@ -32,9 +32,9 @@ export default function PricingPage() {
           <PricingGrid />
         </div>
 
-        <PromoCodeForm />
+        <PromoCodeForm className="mt-10" />
 
-        <div className="mx-auto mt-8 flex max-w-2xl flex-col justify-center gap-3 text-sm font-semibold text-[#5f6359] sm:flex-row sm:gap-8">
+        <div className="mx-auto mt-10 flex max-w-2xl flex-col justify-center gap-3 text-sm font-semibold text-[#5f6359] sm:flex-row sm:gap-8">
           <span className="flex items-center gap-2">
             <CheckCircle2 size={16} className="text-[#617c12]" />
             One-time option available for a single report

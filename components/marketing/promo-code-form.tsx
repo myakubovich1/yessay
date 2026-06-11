@@ -7,16 +7,24 @@ import { cn } from "@/lib/utils";
 
 const styles = {
   light: {
-    label: "text-sm font-semibold text-[#5f6359]",
+    root: "glass-subtle mx-auto w-full max-w-md rounded-[24px] px-6 py-6 text-center",
+    label:
+      "flex items-center justify-center gap-2 text-sm font-extrabold text-[#171912]",
+    icon: "text-[#617c12]",
+    hint: "mt-1.5 text-xs leading-5 text-[#6c7065]",
+    form: "mt-4 flex items-center gap-2.5",
     input:
-      "min-w-0 flex-1 rounded-xl border border-[#171912]/20 bg-white/80 px-4 py-2.5 text-sm font-semibold uppercase tracking-wide text-[#171912] placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-[#9a9e93] focus:border-[#617c12] focus:outline-none",
-    button:
-      "flex items-center gap-2 rounded-xl border border-[#171912] bg-[#c8f85a] px-5 py-2.5 text-sm font-extrabold text-[#171912] shadow-[0_3px_0_#171912] transition disabled:cursor-not-allowed disabled:opacity-50",
+      "h-[50px] min-w-0 flex-1 rounded-full border-[1.5px] border-[#171912]/18 bg-white px-5 text-sm font-semibold uppercase tracking-wide text-[#171912] placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-[#9a9e93] focus:border-[#617c12] focus:outline-none",
+    button: "primary-button px-7 text-sm",
     error: "mt-3 text-sm font-semibold text-[#934157]",
   },
   dark: {
+    root: "",
     label:
-      "text-[0.61rem] font-extrabold uppercase tracking-[0.08em] text-white/40",
+      "flex items-center gap-2 text-[0.61rem] font-extrabold uppercase tracking-[0.08em] text-white/40",
+    icon: "text-[#c8f85a]",
+    hint: null,
+    form: "mt-3 flex items-center gap-2",
     input:
       "min-w-0 flex-1 rounded-xl border border-white/15 bg-white/10 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-[#fffdf8] placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-white/35 focus:border-[#c8f85a] focus:outline-none",
     button:
@@ -69,21 +77,20 @@ export function PromoCodeForm({
   };
 
   return (
-    <div className={cn(variant === "light" && "text-center", className)}>
-      <p
-        className={cn(
-          "flex items-center gap-2",
-          variant === "light" && "justify-center",
-          style.label,
-        )}
-      >
+    <div className={cn(style.root, className)}>
+      <p className={style.label}>
         <TicketPercent
           size={variant === "light" ? 16 : 13}
-          className={variant === "light" ? "text-[#617c12]" : "text-[#c8f85a]"}
+          className={style.icon}
         />
         Have a promo code?
       </p>
-      <form onSubmit={redeem} className="mt-3 flex gap-2">
+      {style.hint && (
+        <p className={style.hint}>
+          Redeem it here for instant access — no card required.
+        </p>
+      )}
+      <form onSubmit={redeem} className={style.form}>
         <input
           type="text"
           value={code}
