@@ -25,14 +25,14 @@ export function LegalPage({
           {children}
         </div>
         <p className="mt-12 border-t border-[#d9e0e9] pt-6 text-sm text-[#6d788a]">
-          Questions about these placeholders can be directed to{" "}
+          Questions about these terms or anything else can be directed to{" "}
           <Link
-            href="mailto:support@example.com"
+            href="mailto:matsvei.yakubovich@gmail.com"
             className="font-semibold text-[#4162a4]"
           >
-            support@example.com
-          </Link>{" "}
-          until a production support address is configured.
+            matsvei.yakubovich@gmail.com
+          </Link>
+          .
         </p>
       </article>
       <Footer />
