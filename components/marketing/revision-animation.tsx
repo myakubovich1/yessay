@@ -1,275 +1,550 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
-import { Check, Sparkles, X, Zap, Target, ShieldCheck, Activity } from "lucide-react";
+import { useEffect, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 
 /**
- * ULTRA-PREMIUM MOTION GRAPHIC SYSTEM
- * - Layered Glassmorphism
- * - Staggered Spring Physics
- * - Mesh Gradients & Dynamic Lighting
- * - High-Frequency Detail (Grid/Noise)
+ * One continuous scene, three beats:
+ *   struggle — slumped over a messy draft, issue marks hovering
+ *   scan     — sits up, a lime beam sweeps the page, scribbles straighten
+ *   done     — score ring pops, checks land, smile, sparkles
+ * Persistent elements (person, desk, page) transform in place; nothing
+ * hard-swaps. Transforms and opacity only; honors prefers-reduced-motion.
  */
 
+type Beat = "struggle" | "scan" | "done";
+
+const BEAT_MS: Record<Beat, number> = {
+  struggle: 4200,
+  scan: 3400,
+  done: 4600,
+};
+const NEXT: Record<Beat, Beat> = {
+  struggle: "scan",
+  scan: "done",
+  done: "struggle",
+};
+
+const INK = "#171912";
+const LIME = "#c8f85a";
+const SKIN = "#eec39a";
+const PAPER = "#fffdf8";
+const MUTED = "#a9ad9e";
+const ORANGE = "#ff8b5e";
+const OLIVE = "#617c12";
+
+const spring = { type: "spring" as const, stiffness: 260, damping: 20 };
+const soft = { duration: 0.7, ease: [0.32, 0.72, 0, 1] as const };
+
+const CAPTIONS: Record<Beat, string> = {
+  struggle: "Stuck on the draft",
+  scan: "Scanning the draft",
+  done: "Ready to submit",
+};
+
 export function RevisionAnimation() {
-  const [phase, setPhase] = useState<"draft" | "engine" | "final">("draft");
+  const reduced = useReducedMotion();
+  const [beat, setBeat] = useState<Beat>(reduced ? "done" : "struggle");
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setPhase((current) => {
-        if (current === "draft") return "engine";
-        if (current === "engine") return "final";
-        return "draft";
-      });
-    }, 6000);
-    return () => clearInterval(interval);
-  }, []);
+    if (reduced) return;
+    const timer = setTimeout(() => setBeat(NEXT[beat]), BEAT_MS[beat]);
+    return () => clearTimeout(timer);
+  }, [beat, reduced]);
+
+  const is = (...beats: Beat[]) => beats.includes(beat);
 
   return (
-    <div className="relative flex h-full min-h-[500px] w-full items-center justify-center overflow-hidden p-12">
-      {/* Background Mesh/Grid */}
-      <div className="absolute inset-0 -z-10 opacity-20">
-        <div className="absolute inset-0 bg-[radial-gradient(#171912_1px,transparent_1px)] [background-size:24px_24px]" />
-        <motion.div
-          animate={{
-            scale: phase === "final" ? 1.5 : 1,
-            x: phase === "engine" ? 100 : 0,
-            opacity: phase === "final" ? 0.4 : 0.2,
-          }}
-          transition={{ duration: 3, ease: "easeInOut" }}
-          className="absolute left-1/2 top-1/2 size-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-tr from-[#c8f85a] to-[#ff8b5e] blur-[120px]"
-        />
-      </div>
+    <div
+      aria-hidden
+      className="flex h-full w-full flex-col items-center justify-center gap-5 px-8 py-10"
+      data-animation="revision"
+    >
+      <svg viewBox="0 0 560 470" className="w-full max-w-[460px]">
+        {/* ---------- floor shadow ---------- */}
+        <ellipse cx="280" cy="436" rx="218" ry="12" fill={INK} opacity="0.07" />
 
-      <AnimatePresence mode="wait">
-        {phase === "draft" && <DraftPhase key="draft" />}
-        {phase === "engine" && <EnginePhase key="engine" />}
-        {phase === "final" && <FinalPhase key="final" />}
-      </AnimatePresence>
+        {/* ---------- report page (hard-shadow tactile card) ---------- */}
+        <g>
+          <rect x="306" y="128" width="186" height="252" rx="22" fill={INK} />
+          <motion.g
+            animate={
+              is("done") && !reduced
+                ? { y: [0, -5, 0], transition: { duration: 3, repeat: Infinity, ease: "easeInOut" } }
+                : { y: 0 }
+            }
+          >
+            <rect
+              x="298"
+              y="120"
+              width="186"
+              height="252"
+              rx="22"
+              fill={PAPER}
+              stroke={INK}
+              strokeWidth="3"
+            />
+            {/* header */}
+            <circle cx="328" cy="152" r="9" fill={LIME} stroke={INK} strokeWidth="2.5" />
+            <rect x="346" y="147" width="74" height="9" rx="4.5" fill={INK} />
+
+            {/* messy scribbles (struggle) */}
+            <motion.g
+              animate={{ opacity: is("struggle") ? 1 : 0 }}
+              transition={soft}
+              stroke={MUTED}
+              strokeWidth="6"
+              strokeLinecap="round"
+              fill="none"
+            >
+              <path d="M320 192 q14 -8 28 0 t28 0 t28 0 t28 0 t18 -2" />
+              <path d="M320 222 q12 8 24 0 t24 0 t24 0 t24 2" />
+              <path d="M320 252 q16 -7 30 0 t30 0 t30 0 t28 -3" />
+              <path d="M320 282 q12 7 24 0 t24 0 t20 2" />
+              <path d="M320 312 q14 -8 28 0 t26 0" />
+            </motion.g>
+
+            {/* clean lines (scan + done) */}
+            <g>
+              {[192, 222, 252, 282, 312].map((y, i) => (
+                <motion.rect
+                  key={y}
+                  x="318"
+                  y={y - 5}
+                  rx="5"
+                  height="10"
+                  fill={i === 1 || i === 3 ? OLIVE : INK}
+                  opacity={i === 1 || i === 3 ? 0.85 : 0.16}
+                  initial={false}
+                  animate={{
+                    width: is("struggle") ? 0 : i === 4 ? 86 : 148,
+                    transition: is("scan")
+                      ? { delay: 0.5 + i * 0.32, duration: 0.45, ease: "easeOut" }
+                      : soft,
+                  }}
+                />
+              ))}
+              {/* lime highlight pills sliding in behind two rows */}
+              {[222, 282].map((y, i) => (
+                <motion.rect
+                  key={y}
+                  x="314"
+                  y={y - 9}
+                  rx="9"
+                  height="18"
+                  fill={LIME}
+                  opacity="0.55"
+                  initial={false}
+                  animate={{
+                    width: is("done") ? 156 : 0,
+                    transition: { delay: 0.25 + i * 0.2, ...soft },
+                  }}
+                />
+              ))}
+            </g>
+
+            {/* footer row */}
+            <rect x="318" y="340" width="52" height="9" rx="4.5" fill={INK} opacity="0.14" />
+            <motion.g
+              initial={false}
+              animate={
+                is("done")
+                  ? { scale: 1, transition: { delay: 0.55, ...spring } }
+                  : { scale: 0 }
+              }
+              style={{ originX: "452px", originY: "344px" }}
+            >
+              <circle cx="452" cy="344" r="13" fill={LIME} stroke={INK} strokeWidth="2.5" />
+              <path
+                d="M446 344 l4.5 4.5 L458 339"
+                stroke={INK}
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            </motion.g>
+          </motion.g>
+
+          {/* scan beam */}
+          <motion.g
+            initial={false}
+            animate={{ opacity: is("scan") ? 1 : 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <motion.g
+              initial={false}
+              animate={
+                is("scan")
+                  ? { y: [0, 218, 0, 218], transition: { duration: 3, ease: "easeInOut", times: [0, 0.4, 0.55, 1] } }
+                  : { y: 0 }
+              }
+            >
+              <rect x="290" y="132" width="202" height="40" rx="8" fill={LIME} opacity="0.28" />
+              <rect x="290" y="150" width="202" height="4" rx="2" fill={LIME} />
+              <circle cx="290" cy="152" r="6" fill={LIME} stroke={INK} strokeWidth="2" />
+              <circle cx="492" cy="152" r="6" fill={LIME} stroke={INK} strokeWidth="2" />
+            </motion.g>
+          </motion.g>
+
+          {/* issue chips -> become checks */}
+          <Chip x={296} y={112} flip={!is("struggle")} delay={0.35} kind="x" />
+          <Chip x={486} y={262} flip={!is("struggle")} delay={0.55} kind="bang" />
+
+          {/* score ring */}
+          <motion.g
+            initial={false}
+            animate={
+              is("done")
+                ? { scale: 1, rotate: 0, transition: { delay: 0.15, ...spring } }
+                : { scale: 0, rotate: -12 }
+            }
+            style={{ originX: "486px", originY: "128px" }}
+          >
+            <circle cx="486" cy="128" r="37" fill={INK} />
+            <circle cx="482" cy="124" r="37" fill={PAPER} stroke={INK} strokeWidth="3" />
+            <motion.circle
+              cx="482"
+              cy="124"
+              r="28"
+              fill="none"
+              stroke={LIME}
+              strokeWidth="7"
+              strokeLinecap="round"
+              strokeDasharray={2 * Math.PI * 28}
+              initial={false}
+              animate={{
+                strokeDashoffset: is("done")
+                  ? 2 * Math.PI * 28 * 0.08
+                  : 2 * Math.PI * 28,
+                transition: { delay: 0.4, duration: 1, ease: [0.32, 0.72, 0, 1] },
+              }}
+              transform="rotate(-90 482 124)"
+            />
+            <text
+              x="482"
+              y="124"
+              textAnchor="middle"
+              dominantBaseline="central"
+              fontSize="22"
+              fontWeight="900"
+              fill={INK}
+              fontFamily="inherit"
+            >
+              92
+            </text>
+          </motion.g>
+        </g>
+
+        {/* ---------- sparkles on done ---------- */}
+        {[
+          { x: 250, y: 120, d: 0.5, s: 1 },
+          { x: 530, y: 210, d: 0.65, s: 0.8 },
+          { x: 270, y: 330, d: 0.8, s: 0.7 },
+          { x: 520, y: 86, d: 0.95, s: 0.9 },
+        ].map((sp) => (
+          <motion.path
+            key={`${sp.x}-${sp.y}`}
+            d="M0 -9 L2.4 -2.4 L9 0 L2.4 2.4 L0 9 L-2.4 2.4 L-9 0 L-2.4 -2.4 Z"
+            fill={OLIVE}
+            initial={false}
+            animate={
+              is("done")
+                ? {
+                    scale: [0, sp.s, 0],
+                    rotate: [0, 90],
+                    transition: { delay: sp.d, duration: 1.4, ease: "easeOut" },
+                  }
+                : { scale: 0 }
+            }
+            style={{ x: sp.x, y: sp.y }}
+          />
+        ))}
+
+        {/* ---------- character ---------- */}
+        <motion.g
+          initial={false}
+          animate={{
+            rotate: is("struggle") ? 5 : is("done") ? -2 : 0,
+            y: is("struggle") ? 9 : 0,
+            transition: { ...spring, damping: 16 },
+          }}
+          style={{ originX: "150px", originY: "404px" }}
+        >
+          {/* breathing */}
+          <motion.g
+            animate={reduced ? { y: 0 } : { y: [0, -3, 0] }}
+            transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            {/* torso */}
+            <path
+              d="M108 404 L108 322 q0 -42 42 -42 q42 0 42 42 L192 404 Z"
+              fill={LIME}
+              stroke={INK}
+              strokeWidth="3"
+            />
+            {/* collar */}
+            <path d="M134 286 q16 12 32 0" fill="none" stroke={INK} strokeWidth="3" strokeLinecap="round" />
+
+            {/* head group (tilts per beat) */}
+            <motion.g
+              initial={false}
+              animate={{
+                rotate: is("struggle") ? 7 : is("done") ? -4 : 0,
+                transition: { ...spring, damping: 15 },
+              }}
+              style={{ originX: "150px", originY: "284px" }}
+            >
+              {/* neck */}
+              <rect x="140" y="262" width="20" height="26" fill={SKIN} stroke={INK} strokeWidth="3" />
+              {/* head */}
+              <circle cx="152" cy="226" r="37" fill={SKIN} stroke={INK} strokeWidth="3" />
+              {/* hair */}
+              <path
+                d="M116 219 q-2 -32 36 -32 q34 0 36 26 q-20 -12 -38 -8 q-22 5 -34 14 Z"
+                fill={INK}
+              />
+              {/* ear */}
+              <circle cx="124" cy="230" r="6.5" fill={SKIN} stroke={INK} strokeWidth="2.5" />
+
+              {/* eyes (blink) */}
+              <motion.g
+                animate={reduced ? { scaleY: 1 } : { scaleY: [1, 1, 0.08, 1, 1] }}
+                transition={{ duration: 3.4, times: [0, 0.46, 0.5, 0.54, 1], repeat: Infinity }}
+                style={{ originX: "165px", originY: "224px" }}
+              >
+                <circle cx="158" cy="224" r="3.2" fill={INK} />
+                <circle cx="180" cy="224" r="3.2" fill={INK} />
+              </motion.g>
+
+              {/* brows */}
+              <motion.g
+                initial={false}
+                animate={{ opacity: is("struggle") ? 1 : 0 }}
+                transition={{ duration: 0.4 }}
+              >
+                <path d="M152 213 l11 4" stroke={INK} strokeWidth="3" strokeLinecap="round" />
+                <path d="M186 217 l-11 -4 " stroke={INK} strokeWidth="3" strokeLinecap="round" />
+              </motion.g>
+              <motion.g
+                initial={false}
+                animate={{ opacity: is("struggle") ? 0 : 1 }}
+                transition={{ duration: 0.4 }}
+              >
+                <path d="M152 214 q6 -4 12 0" stroke={INK} strokeWidth="3" strokeLinecap="round" fill="none" />
+                <path d="M174 214 q6 -4 12 0" stroke={INK} strokeWidth="3" strokeLinecap="round" fill="none" />
+              </motion.g>
+
+              {/* mouths */}
+              <motion.path
+                d="M162 246 q7 -6 14 0"
+                stroke={INK}
+                strokeWidth="3"
+                strokeLinecap="round"
+                fill="none"
+                initial={false}
+                animate={{ opacity: is("struggle") ? 1 : 0 }}
+                transition={{ duration: 0.35 }}
+              />
+              <motion.path
+                d="M162 244 q7 4 14 0"
+                stroke={INK}
+                strokeWidth="3"
+                strokeLinecap="round"
+                fill="none"
+                initial={false}
+                animate={{ opacity: is("scan") ? 1 : 0 }}
+                transition={{ duration: 0.35 }}
+              />
+              <motion.path
+                d="M158 242 q11 12 22 0"
+                stroke={INK}
+                strokeWidth="3.5"
+                strokeLinecap="round"
+                fill="none"
+                initial={false}
+                animate={{ opacity: is("done") ? 1 : 0 }}
+                transition={{ duration: 0.35 }}
+              />
+            </motion.g>
+
+            {/* arm resting on desk (always) */}
+            <path
+              d="M118 318 Q104 366 150 392"
+              fill="none"
+              stroke={SKIN}
+              strokeWidth="13"
+              strokeLinecap="round"
+            />
+
+            {/* arm propping head (struggle) */}
+            <motion.path
+              d="M186 322 Q226 330 196 262"
+              fill="none"
+              stroke={SKIN}
+              strokeWidth="13"
+              strokeLinecap="round"
+              initial={false}
+              animate={{ opacity: is("struggle") ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+            />
+            {/* arm on desk (scan) */}
+            <motion.path
+              d="M186 322 Q214 360 252 388"
+              fill="none"
+              stroke={SKIN}
+              strokeWidth="13"
+              strokeLinecap="round"
+              initial={false}
+              animate={{ opacity: is("scan") ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+            />
+            {/* fist pump (done) */}
+            <motion.g
+              initial={false}
+              animate={{ opacity: is("done") ? 1 : 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.g
+                initial={false}
+                animate={
+                  is("done")
+                    ? { rotate: [14, -6, 6, 0], transition: { delay: 0.2, duration: 0.9, ease: "easeOut" } }
+                    : {}
+                }
+                style={{ originX: "190px", originY: "322px" }}
+              >
+                <path
+                  d="M186 322 Q230 312 238 268"
+                  fill="none"
+                  stroke={SKIN}
+                  strokeWidth="13"
+                  strokeLinecap="round"
+                />
+                <circle cx="240" cy="260" r="11" fill={SKIN} stroke={INK} strokeWidth="2.5" />
+              </motion.g>
+            </motion.g>
+          </motion.g>
+        </motion.g>
+
+        {/* stress squiggle above head (struggle) */}
+        <motion.g
+          initial={false}
+          animate={
+            is("struggle")
+              ? { opacity: [0, 1, 1, 0.4], y: [4, 0, 0, -2], transition: { duration: 3.4, times: [0, 0.15, 0.8, 1] } }
+              : { opacity: 0 }
+          }
+        >
+          <path
+            d="M196 156 q8 -10 16 0 t16 0"
+            fill="none"
+            stroke={ORANGE}
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <circle cx="238" cy="150" r="3" fill={ORANGE} />
+        </motion.g>
+
+        {/* ---------- desk (in front of character) ---------- */}
+        <rect x="56" y="392" width="448" height="15" rx="7.5" fill={INK} />
+        <rect x="92" y="407" width="11" height="44" rx="5" fill={INK} />
+        <rect x="456" y="407" width="11" height="44" rx="5" fill={INK} />
+      </svg>
+
+      {/* caption + beat dots */}
+      <div className="flex flex-col items-center gap-2.5">
+        <div className="relative h-4 w-72">
+          {(Object.keys(CAPTIONS) as Beat[]).map((b) => (
+            <motion.p
+              key={b}
+              initial={false}
+              animate={{ opacity: beat === b ? 1 : 0, y: beat === b ? 0 : 5 }}
+              transition={{ duration: 0.4 }}
+              className="absolute inset-0 text-center text-[11px] font-black uppercase tracking-[0.32em] text-[#6c7065]"
+            >
+              {CAPTIONS[b]}
+            </motion.p>
+          ))}
+        </div>
+        <div className="flex gap-1.5">
+          {(Object.keys(CAPTIONS) as Beat[]).map((b) => (
+            <motion.span
+              key={b}
+              initial={false}
+              animate={{
+                width: beat === b ? 22 : 6,
+                backgroundColor: beat === b ? "#171912" : "#17191233",
+              }}
+              transition={soft}
+              className="h-1.5 rounded-full"
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
 
-function DraftPhase() {
+/** Issue chip that flips into a lime check once the scan passes. */
+function Chip({
+  x,
+  y,
+  flip,
+  delay,
+  kind,
+}: {
+  x: number;
+  y: number;
+  flip: boolean;
+  delay: number;
+  kind: "x" | "bang";
+}) {
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 1.05 }}
-      className="relative flex flex-col items-center gap-12"
-    >
-      <div className="relative">
-        {/* Layered Document Stack */}
-        <motion.div
-          animate={{ rotate: [-2, 0, -2] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="relative z-10 h-64 w-48 rounded-[32px] border border-[#171912]/20 bg-white/80 p-6 shadow-2xl backdrop-blur-xl"
-        >
-          {/* Internal Skeleton Loader Style */}
-          <div className="space-y-4">
-            {[...Array(6)].map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{ width: 0 }}
-                animate={{ width: i === 5 ? "40%" : "100%" }}
-                className="h-2.5 rounded-full bg-[#171912]/5"
-              />
-            ))}
-          </div>
-
-          {/* Floating Issue Markers */}
-          <motion.div
-            initial={{ scale: 0, x: 20 }}
-            animate={{ scale: 1, x: 0 }}
-            className="absolute -right-8 top-12"
-          >
-            <div className="flex size-14 items-center justify-center rounded-2xl border border-[#171912]/10 bg-white p-3 shadow-xl">
-              <div className="size-full rounded-lg bg-[#ff8b5e]/10 flex items-center justify-center text-[#ff8b5e]">
-                <X size={20} strokeWidth={3} />
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ scale: 0, x: -20 }}
-            animate={{ scale: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="absolute -left-12 bottom-16"
-          >
-            <div className="rounded-2xl border border-[#171912]/10 bg-[#171912] px-5 py-3 shadow-2xl">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Missing Source</span>
-            </div>
-          </motion.div>
-        </motion.div>
-
-        {/* Ghost Layers */}
-        <div className="absolute inset-0 -z-10 translate-x-4 translate-y-4 rotate-3 rounded-[32px] border border-[#171912]/5 bg-white/40" />
-        <div className="absolute inset-0 -z-20 translate-x-8 translate-y-8 rotate-6 rounded-[32px] border border-[#171912]/5 bg-white/10" />
-      </div>
-
-      <div className="flex flex-col items-center gap-3">
-        <div className="flex gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <motion.div
-              key={i}
-              animate={{ opacity: [0.2, 1, 0.2] }}
-              transition={{ repeat: Infinity, duration: 1.5, delay: i * 0.2 }}
-              className="size-1.5 rounded-full bg-[#ff8b5e]"
-            />
-          ))}
-        </div>
-        <p className="text-[11px] font-black uppercase tracking-[0.4em] text-[#6c7065]">Analysis Pending</p>
-      </div>
-    </motion.div>
-  );
-}
-
-function EnginePhase() {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="relative flex flex-col items-center gap-14"
-    >
-      <div className="relative h-72 w-[440px] overflow-hidden rounded-[40px] border-[1.5px] border-[#171912]/10 bg-white/60 p-1 shadow-2xl backdrop-blur-2xl">
-        <div className="size-full overflow-hidden rounded-[36px] bg-[#f6f1e8]/30 p-8">
-          {/* Top Bar */}
-          <div className="mb-8 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Activity size={18} className="text-[#171912]" />
-              <div className="h-2 w-24 rounded-full bg-[#171912]/10" />
-            </div>
-            <div className="flex gap-1.5">
-              {[0, 1, 2].map(i => <div key={i} className="size-2 rounded-full bg-[#171912]/20" />)}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-6">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="relative h-2.5 w-full overflow-hidden rounded-full bg-[#171912]/5">
-                  <motion.div
-                    initial={{ x: "-100%" }}
-                    animate={{ x: "0%" }}
-                    transition={{ duration: 1, delay: i * 0.2 }}
-                    className="h-full w-full bg-[#c8f85a]"
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="flex flex-col items-center justify-center rounded-3xl border border-[#171912]/5 bg-white/50 p-6 shadow-inner">
-              <Target size={32} className="mb-3 text-[#171912]" />
-              <div className="h-1.5 w-16 rounded-full bg-[#171912]/20" />
-            </div>
-          </div>
-        </div>
-
-        {/* The Premium Laser HUD */}
-        <motion.div
-          animate={{ y: [-40, 320] }}
-          transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
-          className="absolute inset-x-0 h-24 bg-gradient-to-b from-transparent via-[#c8f85a]/40 to-transparent shadow-[0_0_40px_rgba(200,248,90,0.5)]"
-        >
-          <div className="absolute top-1/2 h-[1px] w-full bg-[#c8f85a]" />
-        </motion.div>
-
-        {/* Central HUD Logic */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <motion.div
-            animate={{ scale: [1, 1.05, 1] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="flex items-center gap-4 rounded-full border border-[#171912]/10 bg-[#171912] px-8 py-4 text-white shadow-2xl"
-          >
-            <Zap size={20} className="text-[#c8f85a]" fill="currentColor" />
-            <span className="text-[13px] font-black uppercase tracking-[0.3em]">AI Synthesis</span>
-          </motion.div>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function FinalPhase() {
-  return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 1.1 }}
-      className="relative flex flex-col items-center gap-10"
-    >
-      <div className="relative">
-        {/* The Radiant Final Report */}
-        <motion.div
-          animate={{ y: [0, -8, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="relative z-10 h-72 w-56 rounded-[40px] border-[2px] border-[#171912] bg-[#c8f85a] p-8 shadow-[16px_16px_0_#171912]"
-        >
-          <div className="flex flex-col h-full">
-            <div className="flex items-center gap-4 mb-8">
-              <div className="flex size-14 items-center justify-center rounded-2xl bg-white shadow-sm">
-                <ShieldCheck size={28} strokeWidth={2.5} className="text-[#171912]" />
-              </div>
-              <div className="space-y-2">
-                <div className="h-3 w-16 rounded-full bg-[#171912]" />
-                <div className="h-2 w-10 rounded-full bg-[#171912]/30" />
-              </div>
-            </div>
-            
-            <div className="space-y-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-2 w-full rounded-full bg-[#171912]/10" />
-              ))}
-            </div>
-
-            <div className="mt-auto flex justify-between items-end">
-              <div className="size-10 rounded-lg bg-[#171912]/5" />
-              <Sparkles size={24} className="text-[#171912]" />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Success HUD Elements */}
-        <motion.div
-          initial={{ x: 30, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          transition={{ delay: 0.4, type: "spring" }}
-          className="absolute -right-16 -top-10"
-        >
-          <div className="rounded-3xl border border-[#171912]/10 bg-white px-7 py-5 shadow-2xl backdrop-blur-md">
-            <div className="flex items-center gap-3">
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#6c7065]">Readiness</span>
-                <strong className="text-3xl font-black italic tracking-tighter text-[#171912]">98%</strong>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.6, type: "spring" }}
-          className="absolute -left-12 top-1/2 size-20 -translate-y-1/2 rounded-full border border-[#171912]/10 bg-white p-4 shadow-2xl backdrop-blur-md"
-        >
-          <div className="flex h-full w-full items-center justify-center rounded-full bg-[#eff9d4]">
-            <Check size={32} strokeWidth={4} className="text-[#566b18]" />
-          </div>
-        </motion.div>
-      </div>
-
-      <div className="flex flex-col items-center gap-2">
-        <p className="text-sm font-black uppercase tracking-[0.5em] text-[#171912]">High Integrity</p>
-        <div className="h-1 w-32 rounded-full bg-[#171912]/5 overflow-hidden">
-          <motion.div 
-            initial={{ x: "-100%" }}
-            animate={{ x: "0%" }}
-            transition={{ duration: 1.5, delay: 0.8 }}
-            className="h-full w-full bg-[#c8f85a]" 
-          />
-        </div>
-      </div>
-    </motion.div>
+    <g>
+      {/* problem state */}
+      <motion.g
+        initial={false}
+        animate={
+          flip
+            ? { scale: 0, transition: { delay, duration: 0.25, ease: "easeIn" } }
+            : { scale: [1, 1.06, 1], transition: { duration: 2.4, repeat: Infinity, ease: "easeInOut" } }
+        }
+        style={{ originX: `${x}px`, originY: `${y}px` }}
+      >
+        <rect x={x - 17} y={y - 17} width="34" height="34" rx="11" fill={PAPER} stroke={INK} strokeWidth="2.5" />
+        {kind === "x" ? (
+          <>
+            <path d={`M${x - 6} ${y - 6} L${x + 6} ${y + 6}`} stroke={ORANGE} strokeWidth="3.5" strokeLinecap="round" />
+            <path d={`M${x + 6} ${y - 6} L${x - 6} ${y + 6}`} stroke={ORANGE} strokeWidth="3.5" strokeLinecap="round" />
+          </>
+        ) : (
+          <>
+            <path d={`M${x} ${y - 8} L${x} ${y + 2}`} stroke={ORANGE} strokeWidth="3.5" strokeLinecap="round" />
+            <circle cx={x} cy={y + 8} r="2.2" fill={ORANGE} />
+          </>
+        )}
+      </motion.g>
+      {/* solved state */}
+      <motion.g
+        initial={false}
+        animate={
+          flip
+            ? { scale: 1, transition: { delay: delay + 0.22, ...spring } }
+            : { scale: 0 }
+        }
+        style={{ originX: `${x}px`, originY: `${y}px` }}
+      >
+        <rect x={x - 17} y={y - 17} width="34" height="34" rx="11" fill={LIME} stroke={INK} strokeWidth="2.5" />
+        <path
+          d={`M${x - 7} ${y} l5 5 l9 -10`}
+          stroke={INK}
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      </motion.g>
+    </g>
   );
 }
