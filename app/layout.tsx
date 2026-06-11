@@ -15,12 +15,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://yessay.matsveiyakubovich.com"),
   title: {
     default: "Yessay: AI Essay Checker",
     template: "%s | Yessay",
   },
   description:
     "Check your essay against the assignment prompt and rubric before you submit.",
+  openGraph: {
+    siteName: "Yessay",
+    type: "website",
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
   icons: {
     icon: "/images/yessay-mark.svg",
   },
