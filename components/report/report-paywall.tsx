@@ -5,6 +5,7 @@ import {
   LockKeyhole,
   Sparkles,
 } from "lucide-react";
+import { PromoCodeForm } from "@/components/marketing/promo-code-form";
 import { getPricingPlan } from "@/lib/pricing";
 import type { PricingProduct } from "@/lib/types";
 
@@ -17,9 +18,11 @@ const alternativeProducts: PricingProduct[] = [
 export function ReportPaywall({
   checkout,
   loading,
+  reportId,
 }: {
   checkout: (product: PricingProduct) => void;
   loading: PricingProduct | null;
+  reportId?: string;
 }) {
   const annual = getPricingPlan("annual");
   const alternatives = alternativeProducts
@@ -115,6 +118,11 @@ export function ReportPaywall({
             One report and Finals Pass are one-time payments. Subscription
             options renew at the cadence shown.
           </p>
+          <PromoCodeForm
+            variant="dark"
+            reportId={reportId}
+            className="mt-4 border-t border-white/10 pt-4"
+          />
         </div>
       </div>
     </section>

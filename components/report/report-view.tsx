@@ -341,7 +341,11 @@ export function ReportView({ reportId }: { reportId: string }) {
         )}
 
         {report.locked && (
-          <ReportPaywall checkout={checkout} loading={checkoutLoading} />
+          <ReportPaywall
+            checkout={checkout}
+            loading={checkoutLoading}
+            reportId={reportId}
+          />
         )}
 
         <div className="report-grid mt-6">
