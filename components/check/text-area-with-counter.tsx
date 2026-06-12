@@ -1,12 +1,12 @@
 import { useId, type TextareaHTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
-import { ScreenshotUpload } from "./screenshot-upload";
+import { SourceUpload } from "./source-upload";
 
 type Props = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   label: string;
   hint?: string;
   showWords?: boolean;
-  screenshotLabel?: string;
+  uploadLabel?: string;
   onTextExtracted?: (text: string) => void;
 };
 
@@ -14,7 +14,7 @@ export function TextAreaWithCounter({
   label,
   hint,
   showWords = false,
-  screenshotLabel,
+  uploadLabel,
   onTextExtracted,
   className,
   value,
@@ -45,9 +45,9 @@ export function TextAreaWithCounter({
         {showWords && <span>{words.toLocaleString()} words</span>}
         <span>{text.length.toLocaleString()} characters</span>
       </span>
-      {screenshotLabel && onTextExtracted && (
-        <ScreenshotUpload
-          label={screenshotLabel}
+      {uploadLabel && onTextExtracted && (
+        <SourceUpload
+          label={uploadLabel}
           disabled={props.disabled}
           onTextExtracted={onTextExtracted}
         />

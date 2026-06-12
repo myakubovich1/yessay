@@ -3,7 +3,9 @@ import { extractTextFromImage } from "@/lib/analysis/ocr";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const MAX_IMAGE_SIZE = 8 * 1024 * 1024;
+// Vercel serverless functions reject request bodies over ~4.5 MB, so
+// advertising a higher limit would produce opaque platform 413s.
+const MAX_IMAGE_SIZE = 4 * 1024 * 1024;
 const ACCEPTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export async function POST(request: Request) {
@@ -27,7 +29,7 @@ export async function POST(request: Request) {
 
     if (image.size > MAX_IMAGE_SIZE) {
       return Response.json(
-        { error: "Screenshot must be smaller than 8 MB." },
+        { error: "Screenshot must be smaller than 4 MB." },
         { status: 413 },
       );
     }

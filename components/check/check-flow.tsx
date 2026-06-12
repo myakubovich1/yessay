@@ -264,7 +264,7 @@ export function CheckFlow() {
                     hint="Required"
                     placeholder="Paste your professor’s assignment instructions here..."
                     value={form.assignmentPrompt}
-                    screenshotLabel="assignment"
+                    uploadLabel="assignment"
                     onTextExtracted={(text) =>
                       addExtractedText("assignmentPrompt", text)
                     }
@@ -352,7 +352,7 @@ export function CheckFlow() {
                     }
                     placeholder="Paste the grading rubric here..."
                     value={form.rubric}
-                    screenshotLabel="rubric"
+                    uploadLabel="rubric"
                     onTextExtracted={(text) => addExtractedText("rubric", text)}
                     disabled={form.noRubric}
                     className={
@@ -371,7 +371,7 @@ export function CheckFlow() {
                     placeholder="Paste your essay draft here..."
                     value={form.draft}
                     showWords
-                    screenshotLabel="draft"
+                    uploadLabel="draft"
                     onTextExtracted={(text) => addExtractedText("draft", text)}
                     className="min-h-80"
                     onChange={(event) => setField("draft", event.target.value)}
