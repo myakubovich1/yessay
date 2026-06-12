@@ -18,6 +18,7 @@ import { AcademicIntegrityNotice } from "@/components/shared/academic-integrity-
 import { GlassCard } from "@/components/ui/glass-card";
 import { trackEvent } from "@/lib/analytics";
 import { sampleInput } from "@/lib/analysis/mock-analysis";
+import { deadlineFromTime, formatRemaining, hoursUntil } from "@/lib/deadline";
 import {
   consumeReportCredit,
   hasActiveFullAccess,
@@ -164,11 +165,18 @@ export function CheckFlow() {
     }
     setLoading(true);
     setError("");
+    // Deadline math happens on-device; the API only sees hours remaining.
+    const deadline = form.dueTonight
+      ? deadlineFromTime(form.dueTime || "23:59")
+      : null;
+    const hoursUntilDeadline = deadline
+      ? Math.min(Math.max(Math.round(hoursUntil(deadline) * 4) / 4, 0.25), 48)
+      : undefined;
     try {
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, hoursUntilDeadline }),
       });
       const data = (await response.json()) as
         | AnalysisReport
@@ -179,6 +187,7 @@ export function CheckFlow() {
       const report: AnalysisReport = {
         ...data,
         locked: fullAccess || reportCredit ? false : data.locked,
+        deadlineAt: deadline?.toISOString(),
         source: {
           assignmentPrompt: form.assignmentPrompt,
           rubric: form.noRubric ? undefined : form.rubric,
@@ -390,29 +399,55 @@ export function CheckFlow() {
                     className="min-h-80"
                     onChange={(event) => setField("draft", event.target.value)}
                   />
-                  <label className="mt-4 flex cursor-pointer items-center justify-between gap-4 rounded-[18px] border border-[#171912] bg-[#cfc3ff] p-4 shadow-[0_4px_0_#171912]">
-                    <span className="flex items-start gap-3">
-                      <span className="flex size-9 items-center justify-center rounded-xl border border-[#171912] bg-white text-[#171912]">
-                        <MoonStar size={18} />
-                      </span>
-                      <span>
-                        <span className="block text-sm font-extrabold text-[#171912]">
-                          Due Tonight Mode
+                  <div className="mt-4 rounded-[18px] border border-[#171912] bg-[#cfc3ff] shadow-[0_4px_0_#171912]">
+                    <label className="flex cursor-pointer items-center justify-between gap-4 p-4">
+                      <span className="flex items-start gap-3">
+                        <span className="flex size-9 items-center justify-center rounded-xl border border-[#171912] bg-white text-[#171912]">
+                          <MoonStar size={18} />
                         </span>
-                        <span className="mt-1 block text-xs text-[#55594f]">
-                          Organize fixes into a fast, time-boxed plan.
+                        <span>
+                          <span className="block text-sm font-extrabold text-[#171912]">
+                            Due Tonight Mode
+                          </span>
+                          <span className="mt-1 block text-xs text-[#55594f]">
+                            A step-by-step plan sized to the hours you actually
+                            have left.
+                          </span>
                         </span>
                       </span>
-                    </span>
-                    <input
-                      type="checkbox"
-                      checked={form.dueTonight}
-                      onChange={(event) =>
-                        setField("dueTonight", event.target.checked)
-                      }
-                      className="size-5 accent-[#171912]"
-                    />
-                  </label>
+                      <input
+                        type="checkbox"
+                        checked={form.dueTonight}
+                        onChange={(event) =>
+                          setField("dueTonight", event.target.checked)
+                        }
+                        className="size-5 accent-[#171912]"
+                      />
+                    </label>
+                    {form.dueTonight && (
+                      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#171912]/25 px-4 py-3">
+                        <label className="flex items-center gap-3">
+                          <span className="text-xs font-extrabold text-[#171912]">
+                            Deadline tonight
+                          </span>
+                          <input
+                            type="time"
+                            value={form.dueTime || "23:59"}
+                            onChange={(event) =>
+                              setField("dueTime", event.target.value)
+                            }
+                            className="h-10 rounded-xl border border-[#171912]/40 bg-white px-3 text-sm font-bold text-[#171912] focus:border-[#171912] focus:outline-none"
+                          />
+                        </label>
+                        <span className="text-xs font-semibold text-[#55594f]">
+                          {formatRemaining(
+                            deadlineFromTime(form.dueTime || "23:59"),
+                          )}{" "}
+                          from now
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </motion.div>

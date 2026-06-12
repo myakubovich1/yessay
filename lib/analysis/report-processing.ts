@@ -1,4 +1,9 @@
-import type { AnalysisInput, AnalysisReport, Severity } from "@/lib/types";
+import type {
+  AnalysisInput,
+  AnalysisReport,
+  DeadlineBlock,
+  Severity,
+} from "@/lib/types";
 import { clamp } from "@/lib/utils";
 import type { OpenAIReportDraft } from "./schema";
 import {
@@ -251,6 +256,74 @@ function buildDueTonightPlan(
   };
 }
 
+const EFFORT_MINUTES = { quick: 10, focused: 20, substantial: 45 } as const;
+
+/**
+ * Builds a sequenced plan that fits the hours actually remaining before the
+ * user's deadline. Fixes are taken in priority order and sized by effort; a
+ * final read-through buffer is always reserved at the end.
+ */
+export function buildDeadlineSchedule(
+  fixes: { fix: string; effort: keyof typeof EFFORT_MINUTES }[],
+  hoursUntilDeadline: number,
+): AnalysisReport["deadlineSchedule"] {
+  const totalMinutes = Math.round(hoursUntilDeadline * 60);
+  const buffer = Math.min(Math.max(Math.round(totalMinutes * 0.15), 10), 25);
+  // Cap planned revision work at four hours; nobody should grind longer
+  // without breaks, and plans beyond that stop being credible.
+  let remaining = Math.min(totalMinutes - buffer, 240);
+
+  const blocks: DeadlineBlock[] = [];
+
+  for (const item of fixes) {
+    if (remaining < 10) break;
+    const duration = EFFORT_MINUTES[item.effort];
+    if (duration <= remaining) {
+      blocks.push({ task: item.fix, durationMinutes: duration, kind: "fix" });
+      remaining -= duration;
+    } else {
+      blocks.push({
+        task: `Start this and go as far as time allows: ${item.fix}`,
+        durationMinutes: remaining,
+        kind: "fix",
+      });
+      remaining = 0;
+    }
+  }
+
+  if (blocks.length === 0 && fixes[0]) {
+    blocks.push({
+      task: fixes[0].fix,
+      durationMinutes: Math.max(totalMinutes - buffer, 5),
+      kind: "fix",
+    });
+  }
+
+  blocks.push({
+    task: "Final read-through, formatting check, and submission",
+    durationMinutes: buffer,
+    kind: "final",
+  });
+
+  const planned = blocks.reduce((sum, block) => sum + block.durationMinutes, 0);
+  const note =
+    totalMinutes < 45
+      ? "Very tight window — do the first block, then make sure the file submits cleanly."
+      : totalMinutes - planned > 45
+        ? "You have more time than this plan needs. Spread the blocks out and take short breaks between them."
+        : undefined;
+
+  return {
+    hoursAvailable: Math.round(hoursUntilDeadline * 10) / 10,
+    blocks,
+    skipIfNoTime: [
+      "Cosmetic word swaps that do not improve meaning.",
+      "Optional formatting polish beyond the professor's stated requirements.",
+    ],
+    note,
+  };
+}
+
 function isCitationOrRequirementDuplicate(warning: string) {
   return /\b(word count|words?|works cited|references|bibliography|sources?|citations?)\b/i.test(
     warning,
@@ -406,6 +479,10 @@ export function createProcessedReport(
     dueTonightPlan: input.dueTonight
       ? buildDueTonightPlan(prioritiesWithEffort)
       : undefined,
+    deadlineSchedule:
+      input.dueTonight && input.hoursUntilDeadline
+        ? buildDeadlineSchedule(prioritiesWithEffort, input.hoursUntilDeadline)
+        : undefined,
     disclaimer:
       "Yessay provides revision guidance and possible issue flags. It does not verify source accuracy, guarantee grades, or replace your professor's instructions.",
     locked: true,

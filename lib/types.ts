@@ -29,6 +29,23 @@ export type AnalysisInput = {
   citationStyle: string;
   dueDate?: string;
   dueTonight: boolean;
+  /** "HH:mm" deadline tonight, chosen by the user. */
+  dueTime?: string;
+  /** Hours between the user's clock and their deadline, computed client-side. */
+  hoursUntilDeadline?: number;
+};
+
+export type DeadlineBlock = {
+  task: string;
+  durationMinutes: number;
+  kind: "fix" | "final";
+};
+
+export type DeadlineSchedule = {
+  hoursAvailable: number;
+  blocks: DeadlineBlock[];
+  skipIfNoTime: string[];
+  note?: string;
 };
 
 export type Severity = "high" | "medium" | "low";
@@ -133,6 +150,10 @@ export type AnalysisReport = {
     sixtyMinuteFixes: string[];
     skipIfNoTime: string[];
   };
+  /** Time-budgeted plan when the user gave a concrete deadline. */
+  deadlineSchedule?: DeadlineSchedule;
+  /** ISO timestamp of the user's deadline, set on-device at analysis time. */
+  deadlineAt?: string;
   disclaimer: string;
   locked: boolean;
   /** Original inputs, kept on-device so the AI revision can run later. */

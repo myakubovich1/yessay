@@ -9,6 +9,8 @@ export const analysisInputSchema = z.object({
   citationStyle: z.string().trim().min(1).max(50),
   dueDate: z.string().trim().max(50).optional(),
   dueTonight: z.boolean(),
+  dueTime: z.string().trim().max(10).optional(),
+  hoursUntilDeadline: z.number().min(0.25).max(48).optional(),
 });
 
 const severitySchema = z.enum(["high", "medium", "low"]);

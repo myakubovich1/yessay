@@ -90,6 +90,7 @@ ${JSON.stringify(
     citationStyle: input.citationStyle,
     rubricAvailable: !input.noRubric,
     dueTonight: input.dueTonight,
+    hoursUntilDeadline: input.hoursUntilDeadline || null,
     dueDate: input.dueDate || null,
     draftWordCount: countWords(input.draft),
     assignmentPrompt: input.assignmentPrompt,

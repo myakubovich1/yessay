@@ -5,6 +5,7 @@ import {
   getGenreLabels,
   requiresCitations,
 } from "./report-processing";
+import { buildDeadlineSchedule } from "./report-processing";
 import { getReadinessStatus, weightedScore } from "./scoring";
 
 export const sampleInput: AnalysisInput = {
@@ -433,6 +434,31 @@ export function createMockReport(
         status: "needs_work",
       },
     ],
+    deadlineSchedule:
+      input.dueTonight && input.hoursUntilDeadline
+        ? buildDeadlineSchedule(
+            (missingRequirements.length
+              ? missingRequirements.slice(0, 4).map((item, index) => ({
+                  fix: item.suggestedFix,
+                  effort: (index === 0 ? "focused" : "quick") as
+                    | "focused"
+                    | "quick",
+                }))
+              : [
+                  {
+                    fix: "Do one final line-by-line comparison with the assignment instructions before submitting.",
+                    effort: "focused" as const,
+                  },
+                ]
+            ).concat([
+              {
+                fix: "Revise paragraph order and transitions for the weakest section.",
+                effort: "focused" as const,
+              },
+            ]),
+            input.hoursUntilDeadline,
+          )
+        : undefined,
     dueTonightPlan: input.dueTonight
       ? {
           fifteenMinuteFixes: [

@@ -45,6 +45,7 @@ import { AcademicIntegrityNotice } from "@/components/shared/academic-integrity-
 import { EmptyState } from "@/components/shared/empty-state";
 import { GlassCard } from "@/components/ui/glass-card";
 import { ChecklistItem } from "./checklist-item";
+import { DeadlineScheduleSection } from "./deadline-schedule";
 import { LockedSection } from "./locked-section";
 import { MobileRepairBar } from "./mobile-repair-bar";
 import { RepairPanel } from "./repair-panel";
@@ -654,7 +655,14 @@ export function ReportView({ reportId }: { reportId: string }) {
                   ))}
                 </ReportSection>
 
-                {report.dueTonightPlan && (
+                {report.deadlineSchedule && (
+                  <DeadlineScheduleSection
+                    schedule={report.deadlineSchedule}
+                    deadlineAt={report.deadlineAt}
+                  />
+                )}
+
+                {!report.deadlineSchedule && report.dueTonightPlan && (
                   <ReportSection
                     title="Due Tonight Plan"
                     description="Choose the time window you actually have and work in order."
