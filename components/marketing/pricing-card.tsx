@@ -66,9 +66,18 @@ export function PricingCard({
 
       <p className="pricing-card__name">{plan.name}</p>
       <div className="pricing-card__price">
-        <strong>{plan.price}</strong>
-        {plan.cadence && <span>{plan.cadence}</span>}
+        <strong>{plan.monthlyEquivalent || plan.price}</strong>
+        {plan.monthlyEquivalent ? (
+          <span>/month</span>
+        ) : (
+          plan.cadence && <span>{plan.cadence}</span>
+        )}
       </div>
+      {plan.monthlyEquivalent && (
+        <p className="pricing-card__billed-as">
+          Billed yearly as {plan.price}
+        </p>
+      )}
       <p className="pricing-card__description">{plan.description}</p>
       <span className="pricing-card__value">{plan.valueNote}</span>
 

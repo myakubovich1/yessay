@@ -58,7 +58,7 @@ export default function PricingPage() {
               ],
               [
                 "Annual Access",
-                "Unlimited full reports for $49.99/year, including every future check during the access period.",
+                "Unlimited full reports for $4.17/month billed yearly ($49.99), including every future check during the access period.",
               ],
             ].map(([title, copy]) => (
               <div key={title}>

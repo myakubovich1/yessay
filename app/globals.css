@@ -411,6 +411,19 @@ select:focus-visible {
   color: rgba(255, 255, 255, 0.5);
 }
 
+.pricing-card__billed-as {
+  position: relative;
+  z-index: 1;
+  margin-top: 7px;
+  color: rgba(23, 25, 18, 0.62);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.pricing-card--lime .pricing-card__billed-as {
+  color: rgba(255, 255, 255, 0.62);
+}
+
 .pricing-card__description {
   position: relative;
   z-index: 1;
