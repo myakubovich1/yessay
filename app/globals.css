@@ -859,6 +859,10 @@ select:focus-visible {
   gap: 4px;
 }
 
+.report-paywall__alternative > span:first-child {
+  flex: 1;
+}
+
 .report-paywall__alternative strong {
   font-size: 0.74rem;
   font-weight: 800;
@@ -870,7 +874,7 @@ select:focus-visible {
 }
 
 .report-paywall__alternative-price {
-  flex: 0 0 auto;
+  flex: 0 0 70px;
   justify-items: end;
 }
 
