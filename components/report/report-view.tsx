@@ -45,6 +45,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { GlassCard } from "@/components/ui/glass-card";
 import { ChecklistItem } from "./checklist-item";
 import { LockedSection } from "./locked-section";
+import { MobileRepairBar } from "./mobile-repair-bar";
 import { RepairPanel } from "./repair-panel";
 import { ReportSection } from "./report-section";
 import { ReportPaywall } from "./report-paywall";
@@ -52,6 +53,7 @@ import { RevisionSection } from "./revision-section";
 import { ScoreRing } from "./score-ring";
 import { SeverityBadge } from "./severity-badge";
 import { StatusBadge } from "./status-badge";
+import { useDraftRepair } from "./use-draft-repair";
 
 const scoreLabels: Record<
   keyof AnalysisReport["scoreBreakdown"],
@@ -94,6 +96,7 @@ export function ReportView({ reportId }: { reportId: string }) {
   const [checkoutError, setCheckoutError] = useState("");
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
   const [revision, setRevision] = useState<DraftRevision | null>(null);
+  const repair = useDraftRepair(report, setRevision);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -693,9 +696,8 @@ export function ReportView({ reportId }: { reportId: string }) {
             {!report.locked && (
               <>
                 <RepairPanel
-                  report={report}
                   revision={revision}
-                  onRevision={setRevision}
+                  repair={repair}
                   checkout={checkout}
                   checkoutLoading={checkoutLoading}
                 />
@@ -746,6 +748,14 @@ export function ReportView({ reportId }: { reportId: string }) {
           </aside>
         </div>
       </div>
+
+      <MobileRepairBar
+        report={report}
+        revision={revision}
+        repair={repair}
+        checkout={checkout}
+        checkoutLoading={checkoutLoading}
+      />
 
       {report.locked && (
         <div className="no-print fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-white bg-white/88 p-3 shadow-2xl backdrop-blur-xl lg:hidden">

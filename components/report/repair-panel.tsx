@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   ArrowDown,
   LoaderCircle,
@@ -9,77 +8,24 @@ import {
   Wand2,
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
-import { getFixGrant } from "@/lib/storage/local-entitlements";
-import {
-  getRegenerationCount,
-  recordRegeneration,
-  saveRevision,
-} from "@/lib/storage/local-revisions";
 import { getPricingPlan } from "@/lib/pricing";
-import type {
-  AnalysisReport,
-  DraftRevision,
-  PricingProduct,
-} from "@/lib/types";
-
-const MAX_REPAIR_DRAFT_CHARS = 30000;
+import type { DraftRevision, PricingProduct } from "@/lib/types";
+import type { DraftRepairState } from "./use-draft-repair";
 
 export function RepairPanel({
-  report,
   revision,
-  onRevision,
+  repair,
   checkout,
   checkoutLoading,
 }: {
-  report: AnalysisReport;
   revision: DraftRevision | null;
-  onRevision: (revision: DraftRevision) => void;
+  repair: DraftRepairState;
   checkout: (product: PricingProduct) => void;
   checkoutLoading: PricingProduct | null;
 }) {
-  const [generating, setGenerating] = useState(false);
-  const [error, setError] = useState("");
-  const grant = getFixGrant(report.id);
   const monthly = getPricingPlan("monthly");
-  const regenerations = getRegenerationCount(report.id);
-
-  const generate = async (isRegeneration: boolean) => {
-    const activeGrant = getFixGrant(report.id);
-    if (!activeGrant || !report.source || generating) return;
-    setGenerating(true);
-    setError("");
-    try {
-      const response = await fetch("/api/fix-essay", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          entitlementToken: activeGrant.token,
-          reportId: report.id,
-          source: report.source,
-          priorityFixes: report.priorityFixes.map((item) => item.fix),
-        }),
-      });
-      const data = (await response.json()) as
-        | DraftRevision
-        | { error: string };
-      if (!response.ok || "error" in data) {
-        throw new Error(
-          "error" in data ? data.error : "The repair couldn't be completed.",
-        );
-      }
-      saveRevision(data);
-      if (isRegeneration) recordRegeneration(report.id);
-      onRevision(data);
-    } catch (repairError) {
-      setError(
-        repairError instanceof Error
-          ? repairError.message
-          : "The repair couldn't be completed. Please try again.",
-      );
-    } finally {
-      setGenerating(false);
-    }
-  };
+  const { grant, generating, error, generate, regenerations, repairability } =
+    repair;
 
   return (
     <GlassCard subtle className="p-5">
@@ -90,12 +36,12 @@ export function RepairPanel({
         <p className="font-extrabold text-[#171912]">AI Draft Repair</p>
       </div>
 
-      {!report.source ? (
+      {repairability === "no_source" ? (
         <p className="mt-3 text-sm leading-6 text-[#6b7688]">
           This report predates draft repair. Run a new check on this essay to
           enable it.
         </p>
-      ) : report.source.draft.length > MAX_REPAIR_DRAFT_CHARS ? (
+      ) : repairability === "too_long" ? (
         <p className="mt-3 text-sm leading-6 text-[#6b7688]">
           Drafts up to 30,000 characters can be repaired right now. This draft
           is longer — repair the most important sections separately.
