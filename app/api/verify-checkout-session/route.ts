@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { verifyDemoCheckoutToken } from "@/lib/payments/checkout-token";
+import { createFixEntitlementToken } from "@/lib/payments/entitlement-token";
 import { getStripe } from "@/lib/payments/stripe";
 import type { PricingProduct } from "@/lib/types";
 
@@ -12,10 +13,17 @@ const verificationSchema = z
 
 const pricingProducts: PricingProduct[] = [
   "single_report",
+  "draft_repair",
   "finals_pass",
   "monthly",
   "annual",
 ];
+
+function fixGrantFor(product: PricingProduct, reportId?: string) {
+  const granted = createFixEntitlementToken(product, reportId);
+  if (!granted) return undefined;
+  return { token: granted.token, ...granted.entitlement };
+}
 
 export async function POST(request: Request) {
   try {
@@ -35,7 +43,11 @@ export async function POST(request: Request) {
           { status: 403 },
         );
       }
-      return Response.json({ ...grant, demo: true });
+      return Response.json({
+        ...grant,
+        demo: true,
+        fixGrant: fixGrantFor(grant.product, grant.reportId),
+      });
     }
 
     const stripe = getStripe();
@@ -62,10 +74,12 @@ export async function POST(request: Request) {
       );
     }
 
+    const reportId = session.metadata?.reportId || undefined;
     return Response.json({
       product,
-      reportId: session.metadata?.reportId || undefined,
+      reportId,
       demo: false,
+      fixGrant: fixGrantFor(product, reportId),
     });
   } catch (error) {
     console.error("Checkout verification error", error);

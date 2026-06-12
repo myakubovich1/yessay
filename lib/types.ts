@@ -135,10 +135,38 @@ export type AnalysisReport = {
   };
   disclaimer: string;
   locked: boolean;
+  /** Original inputs, kept on-device so the AI revision can run later. */
+  source?: ReportSource;
+};
+
+export type ReportSource = {
+  assignmentPrompt: string;
+  rubric?: string;
+  draft: string;
+  assignmentType: string;
+  citationStyle: string;
+};
+
+export type RevisionChange = {
+  paragraph: number;
+  original: string;
+  revised: string;
+  reason: string;
+  criterion: string;
+};
+
+export type DraftRevision = {
+  reportId: string;
+  createdAt: string;
+  revisedDraft: string;
+  changes: RevisionChange[];
+  summary: string;
+  notChanged: string[];
 };
 
 export type PricingProduct =
   | "single_report"
+  | "draft_repair"
   | "finals_pass"
   | "monthly"
   | "annual";

@@ -33,15 +33,22 @@ import {
   getReport,
   saveChecklistProgress,
 } from "@/lib/storage/local-reports";
-import type { AnalysisReport, PricingProduct } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { getRevision } from "@/lib/storage/local-revisions";
+import type {
+  AnalysisReport,
+  DraftRevision,
+  PricingProduct,
+} from "@/lib/types";
+import { cn, formatDate } from "@/lib/utils";
 import { AcademicIntegrityNotice } from "@/components/shared/academic-integrity-notice";
 import { EmptyState } from "@/components/shared/empty-state";
 import { GlassCard } from "@/components/ui/glass-card";
 import { ChecklistItem } from "./checklist-item";
 import { LockedSection } from "./locked-section";
+import { RepairPanel } from "./repair-panel";
 import { ReportSection } from "./report-section";
 import { ReportPaywall } from "./report-paywall";
+import { RevisionSection } from "./revision-section";
 import { ScoreRing } from "./score-ring";
 import { SeverityBadge } from "./severity-badge";
 import { StatusBadge } from "./status-badge";
@@ -86,6 +93,7 @@ export function ReportView({ reportId }: { reportId: string }) {
   const [copyLabel, setCopyLabel] = useState("Copy Report");
   const [checkoutError, setCheckoutError] = useState("");
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
+  const [revision, setRevision] = useState<DraftRevision | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -95,6 +103,7 @@ export function ReportView({ reportId }: { reportId: string }) {
           : getReport(reportId) || null;
       setReport(value);
       setCheckedItems(getChecklistProgress(reportId));
+      setRevision(getRevision(reportId));
       setLoaded(true);
     }, 0);
     return () => window.clearTimeout(timer);
@@ -364,6 +373,8 @@ export function ReportView({ reportId }: { reportId: string }) {
               </div>
             ) : (
               <>
+                {revision && <RevisionSection revision={revision} />}
+
                 <ReportSection
                   title="Prompt Snapshot"
                   description="What Yessay detected in the assignment instructions."
@@ -594,10 +605,22 @@ export function ReportView({ reportId }: { reportId: string }) {
                           <p className="text-sm font-semibold leading-6 text-[#344158]">
                             {item.fix}
                           </p>
-                          <div className="mt-2 flex flex-wrap gap-3 text-xs text-[#7b8596]">
-                            <span>{item.estimatedImpact} impact</span>
-                            <span>·</span>
-                            <span>{item.timeEstimate}</span>
+                          <div className="mt-2.5 flex flex-wrap gap-2">
+                            <span
+                              className={cn(
+                                "rounded-full border px-2.5 py-0.5 text-[11px] font-extrabold",
+                                item.estimatedImpact === "high"
+                                  ? "border-[#e8b7a4] bg-[#fdeee7] text-[#a04e2c]"
+                                  : item.estimatedImpact === "medium"
+                                    ? "border-[#e2d6a7] bg-[#faf3da] text-[#8a6d1d]"
+                                    : "border-[#cfd8c2] bg-[#eef3e6] text-[#5a7034]",
+                              )}
+                            >
+                              {item.estimatedImpact} impact
+                            </span>
+                            <span className="rounded-full border border-[#d8dde6] bg-white/70 px-2.5 py-0.5 text-[11px] font-bold text-[#657081]">
+                              {item.timeEstimate}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -666,20 +689,58 @@ export function ReportView({ reportId }: { reportId: string }) {
             )}
           </div>
 
-          <aside className="space-y-4 lg:sticky lg:top-24">
+          <aside className="no-print space-y-4 lg:sticky lg:top-24">
             {!report.locked && (
-              <GlassCard subtle className="p-5">
-                <div className="flex items-center gap-3 text-[#34775f]">
-                  <span className="flex size-9 items-center justify-center rounded-xl bg-[#e1f0e9]">
-                    <Sparkles size={18} />
-                  </span>
-                  <p className="font-semibold">Full report unlocked</p>
-                </div>
-                <p className="mt-3 text-sm leading-6 text-[#6b7688]">
-                  Use this report as a revision guide, then make every final
-                  writing decision yourself.
-                </p>
-              </GlassCard>
+              <>
+                <RepairPanel
+                  report={report}
+                  revision={revision}
+                  onRevision={setRevision}
+                  checkout={checkout}
+                  checkoutLoading={checkoutLoading}
+                />
+                <GlassCard subtle className="p-5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-extrabold text-[#171912]">
+                      Revision progress
+                    </p>
+                    <span className="text-xs font-bold text-[#6c7065]">
+                      {checkedItems.length}/{report.finalChecklist.length}
+                    </span>
+                  </div>
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#dedbd2]">
+                    <div
+                      className="h-full rounded-full bg-[#9fc433] transition-[width] duration-500"
+                      style={{
+                        width: `${
+                          report.finalChecklist.length
+                            ? Math.round(
+                                (checkedItems.length /
+                                  report.finalChecklist.length) *
+                                  100,
+                              )
+                            : 0
+                        }%`,
+                      }}
+                    />
+                  </div>
+                  <p className="mt-3 text-xs leading-5 text-[#85887f]">
+                    Tick checklist items as you fix them in your document.
+                  </p>
+                </GlassCard>
+                <GlassCard subtle className="p-5">
+                  <div className="flex items-center gap-3 text-[#34775f]">
+                    <span className="flex size-9 items-center justify-center rounded-xl bg-[#e1f0e9]">
+                      <Sparkles size={18} />
+                    </span>
+                    <p className="font-semibold">Full report unlocked</p>
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-[#6b7688]">
+                    Use this report as a revision guide, then make every final
+                    writing decision yourself.
+                  </p>
+                </GlassCard>
+              </>
             )}
             <AcademicIntegrityNotice compact />
           </aside>

@@ -38,7 +38,7 @@ export const pricingPlans: PricingPlan[] = [
     description: "Unlimited reports through the full academic year.",
     features: [
       "Unlimited essay checks",
-      "All reports saved",
+      "Unlimited AI draft repairs",
       "Due Tonight repair plans",
       "Every future report unlocked",
     ],
@@ -71,7 +71,7 @@ export const pricingPlans: PricingPlan[] = [
     description: "Unlimited full feedback without a long commitment.",
     features: [
       "Unlimited essay checks",
-      "All reports saved",
+      "Unlimited AI draft repairs",
       "Ongoing revision guidance",
     ],
     product: "monthly",
@@ -85,8 +85,8 @@ export const pricingPlans: PricingPlan[] = [
     description: "Unlimited full reports during your busiest seven days.",
     features: [
       "Unlimited essay checks",
+      "Unlimited AI draft repairs",
       "Due Tonight repair plans",
-      "All reports saved",
     ],
     product: "finals_pass",
     label: "No subscription",

@@ -27,10 +27,19 @@ export function getReport(id: string) {
 export function saveReport(report: AnalysisReport) {
   if (!canUseStorage()) return;
   const reports = getReports().filter((item) => item.id !== report.id);
-  window.localStorage.setItem(
-    REPORTS_KEY,
-    JSON.stringify([report, ...reports].slice(0, 30)),
-  );
+  // Reports now carry their source draft, so respect the storage quota by
+  // shedding the oldest reports if a write fails.
+  for (let keep = 30; keep >= 1; keep = Math.floor(keep / 2)) {
+    try {
+      window.localStorage.setItem(
+        REPORTS_KEY,
+        JSON.stringify([report, ...reports].slice(0, keep)),
+      );
+      break;
+    } catch {
+      if (keep === 1) return;
+    }
+  }
   window.localStorage.setItem(LAST_REPORT_KEY, report.id);
 }
 

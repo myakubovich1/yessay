@@ -67,9 +67,13 @@ export function verifyDemoCheckoutToken(token: string) {
     ) as DemoCheckoutGrant;
     if (
       grant.expiresAt <= Date.now() ||
-      !["single_report", "finals_pass", "monthly", "annual"].includes(
-        grant.product,
-      )
+      ![
+        "single_report",
+        "draft_repair",
+        "finals_pass",
+        "monthly",
+        "annual",
+      ].includes(grant.product)
     ) {
       return null;
     }

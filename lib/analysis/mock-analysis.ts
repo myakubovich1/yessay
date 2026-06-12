@@ -466,5 +466,12 @@ export function createSampleReport(locked = false) {
   return {
     ...createMockReport(sampleInput, { id: "sample-report", locked }),
     analysisMode: "sample" as const,
+    source: {
+      assignmentPrompt: sampleInput.assignmentPrompt,
+      rubric: sampleInput.noRubric ? undefined : sampleInput.rubric,
+      draft: sampleInput.draft,
+      assignmentType: sampleInput.assignmentType,
+      citationStyle: sampleInput.citationStyle,
+    },
   };
 }

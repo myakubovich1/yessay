@@ -3,7 +3,13 @@ import { createDemoCheckoutToken } from "@/lib/payments/checkout-token";
 import { getPriceId, getStripe } from "@/lib/payments/stripe";
 
 const checkoutSchema = z.object({
-  product: z.enum(["single_report", "finals_pass", "monthly", "annual"]),
+  product: z.enum([
+    "single_report",
+    "draft_repair",
+    "finals_pass",
+    "monthly",
+    "annual",
+  ]),
   reportId: z.string().max(100).optional(),
 });
 

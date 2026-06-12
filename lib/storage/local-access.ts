@@ -59,6 +59,11 @@ export function consumeReportCredit() {
 export function grantAccess(product: PricingProduct, reportId?: string | null) {
   if (!canUseStorage()) return;
 
+  if (product === "draft_repair") {
+    // Repair access is carried by the signed fix grant, stored separately.
+    return;
+  }
+
   if (product === "single_report") {
     if (reportId) {
       unlockReport(reportId);

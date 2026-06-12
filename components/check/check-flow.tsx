@@ -175,8 +175,17 @@ export function CheckFlow() {
       if (!response.ok || "error" in data) {
         throw new Error("error" in data ? data.error : "Analysis failed.");
       }
-      const report =
-        fullAccess || reportCredit ? { ...data, locked: false } : data;
+      const report: AnalysisReport = {
+        ...data,
+        locked: fullAccess || reportCredit ? false : data.locked,
+        source: {
+          assignmentPrompt: form.assignmentPrompt,
+          rubric: form.noRubric ? undefined : form.rubric,
+          draft: form.draft,
+          assignmentType: form.assignmentType,
+          citationStyle: form.citationStyle,
+        },
+      };
       saveReport(report);
       if (!fullAccess && reportCredit && consumeReportCredit()) {
         setReportCredit(false);

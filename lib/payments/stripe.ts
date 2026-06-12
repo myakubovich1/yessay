@@ -24,6 +24,7 @@ export function getPriceId(product: PricingProduct) {
     single_report:
       singleReportPrices[singleReportPriceVariant] ||
       process.env.STRIPE_SINGLE_REPORT_PRICE_ID,
+    draft_repair: process.env.STRIPE_DRAFT_REPAIR_PRICE_ID,
     finals_pass: process.env.STRIPE_FINALS_PASS_PRICE_ID,
     monthly: process.env.STRIPE_MONTHLY_PRICE_ID,
     annual: process.env.STRIPE_ANNUAL_PRICE_ID,

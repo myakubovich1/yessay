@@ -4,6 +4,7 @@ import type { PricingProduct } from "@/lib/types";
 
 const products: PricingProduct[] = [
   "single_report",
+  "draft_repair",
   "finals_pass",
   "monthly",
   "annual",

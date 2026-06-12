@@ -5,6 +5,10 @@ import Link from "next/link";
 import { AlertTriangle, ArrowRight, Check, LoaderCircle } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { grantAccess } from "@/lib/storage/local-access";
+import {
+  saveFixGrant,
+  type StoredFixGrant,
+} from "@/lib/storage/local-entitlements";
 import { getReports } from "@/lib/storage/local-reports";
 import type { PricingProduct } from "@/lib/types";
 
@@ -47,6 +51,7 @@ export function SuccessView({
               reportId?: string;
               demo: boolean;
               via?: "demo" | "promo";
+              fixGrant?: StoredFixGrant;
             }
           | { error: string };
         if (!response.ok || "error" in data) {
@@ -56,6 +61,7 @@ export function SuccessView({
         }
 
         grantAccess(data.product, data.reportId);
+        if (data.fixGrant) saveFixGrant(data.fixGrant);
         // Subscriptions unlock every saved report; land on the latest one
         // instead of sending the buyer back through the check form.
         const reportId =
@@ -117,15 +123,17 @@ export function SuccessView({
   }
 
   const accessMessage =
-    verification.product === "finals_pass"
-      ? "Your seven-day Finals Pass is active in this browser, including future checks."
-      : verification.product === "monthly"
-        ? "Your monthly access is active in this browser, including future checks."
-        : verification.product === "annual"
-          ? "Your annual access is active in this browser, including future checks."
-          : verification.reportId
-            ? "Your full report is ready in this browser."
-            : "One full-report credit is ready for your next essay analysis.";
+    verification.product === "draft_repair"
+      ? "Draft repair is unlocked for this report. Run it from the report page and review every change."
+      : verification.product === "finals_pass"
+        ? "Your seven-day Finals Pass is active in this browser, including future checks and draft repairs."
+        : verification.product === "monthly"
+          ? "Your monthly access is active in this browser, including future checks and draft repairs."
+          : verification.product === "annual"
+            ? "Your annual access is active in this browser, including future checks and draft repairs."
+            : verification.reportId
+              ? "Your full report is ready in this browser."
+              : "One full-report credit is ready for your next essay analysis.";
 
   const destination = verification.reportId
     ? `/report/${verification.reportId}`
