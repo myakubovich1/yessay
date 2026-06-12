@@ -696,6 +696,7 @@ export function ReportView({ reportId }: { reportId: string }) {
             {!report.locked && (
               <>
                 <RepairPanel
+                  reportId={reportId}
                   revision={revision}
                   repair={repair}
                   checkout={checkout}

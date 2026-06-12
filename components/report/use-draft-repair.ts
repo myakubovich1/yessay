@@ -23,6 +23,9 @@ export function useDraftRepair(
 ) {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [, setNonce] = useState(0);
+  /** Re-reads grants from storage after an in-place promo redemption. */
+  const refresh = () => setNonce((nonce) => nonce + 1);
 
   const grant = report ? getFixGrant(report.id) : null;
   const regenerations = report ? getRegenerationCount(report.id) : 0;
@@ -78,7 +81,15 @@ export function useDraftRepair(
     }
   };
 
-  return { grant, generating, error, generate, regenerations, repairability };
+  return {
+    grant,
+    generating,
+    error,
+    generate,
+    regenerations,
+    repairability,
+    refresh,
+  };
 }
 
 export type DraftRepairState = ReturnType<typeof useDraftRepair>;
