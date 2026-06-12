@@ -60,6 +60,7 @@ export async function POST(request: Request) {
 
     const session = await stripe.checkout.sessions.retrieve(
       parsed.data.sessionId,
+      { expand: ["subscription"] },
     );
     const product = session.metadata?.product as PricingProduct | undefined;
     if (
@@ -70,6 +71,21 @@ export async function POST(request: Request) {
     ) {
       return Response.json(
         { error: "Payment has not been confirmed." },
+        { status: 403 },
+      );
+    }
+
+    // Sessions can be re-verified later to refresh entitlements (renewals,
+    // expired fix tokens). For subscriptions, only honor that while the
+    // subscription is still active.
+    const subscription = session.subscription;
+    if (
+      subscription &&
+      typeof subscription !== "string" &&
+      !["active", "trialing", "past_due"].includes(subscription.status)
+    ) {
+      return Response.json(
+        { error: "This subscription is no longer active." },
         { status: 403 },
       );
     }

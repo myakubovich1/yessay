@@ -27,7 +27,7 @@ export function MobileRepairBar({
 }) {
   if (report.locked || repair.repairability !== "ok") return null;
 
-  const { grant, generating, error, generate } = repair;
+  const { included, generating, error, generate } = repair;
 
   return (
     <div className="no-print fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-white bg-white/88 p-3 shadow-2xl backdrop-blur-xl lg:hidden">
@@ -36,7 +36,7 @@ export function MobileRepairBar({
           <ArrowDown size={15} />
           See your revised draft
         </a>
-      ) : grant ? (
+      ) : included ? (
         <>
           <button
             type="button"

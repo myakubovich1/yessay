@@ -34,8 +34,16 @@ export function RepairPanel({
   checkoutLoading: PricingProduct | null;
 }) {
   const monthly = getPricingPlan("monthly");
-  const { grant, generating, error, generate, regenerations, repairability } =
-    repair;
+  const {
+    grant,
+    included,
+    generating,
+    error,
+    generate,
+    regenerations,
+    repairability,
+  } = repair;
+  const viaPlan = included && (!grant || grant.product !== "draft_repair");
   const [showPromo, setShowPromo] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
@@ -125,7 +133,7 @@ export function RepairPanel({
             <ArrowDown size={15} />
             See the revision
           </a>
-          {grant && regenerations < 1 && (
+          {included && regenerations < 1 && (
             <button
               type="button"
               disabled={generating}
@@ -141,7 +149,7 @@ export function RepairPanel({
             </button>
           )}
         </>
-      ) : grant ? (
+      ) : included ? (
         <>
           <p className="mt-3 text-sm leading-6 text-[#6b7688]">
             Generate a revised version of this draft with every change tracked
@@ -160,6 +168,11 @@ export function RepairPanel({
             )}
             {generating ? "Repairing your draft..." : "Repair my draft"}
           </button>
+          {viaPlan && !generating && (
+            <p className="mt-2 text-center text-xs font-semibold leading-5 text-[#617c12]">
+              Included with your plan
+            </p>
+          )}
           {generating && (
             <p className="mt-2 text-center text-xs leading-5 text-[#85887f]">
               This usually takes under a minute. Keep this page open.
@@ -198,6 +211,20 @@ export function RepairPanel({
           <p className="mt-3 text-xs leading-5 text-[#85887f]">
             Included with Finals Pass, Monthly, and Annual access.
           </p>
+        </>
+      )}
+
+      {error && (
+        <p role="alert" className="mt-3 text-xs leading-5 text-[#98485c]">
+          {error}
+        </p>
+      )}
+
+      {/* Promo entry is useful whenever there is no signed grant yet:
+          for non-payers, and for plan holders whose token couldn't be
+          re-confirmed on this device. */}
+      {repairability === "ok" && !revision && !grant && (
+        <>
           {!showPromo ? (
             <button
               type="button"
@@ -208,7 +235,10 @@ export function RepairPanel({
               Have a promo code?
             </button>
           ) : (
-            <form onSubmit={(event) => void redeemPromo(event)} className="mt-3 flex gap-2">
+            <form
+              onSubmit={(event) => void redeemPromo(event)}
+              className="mt-3 flex gap-2"
+            >
               <input
                 type="text"
                 value={promoCode}
@@ -239,12 +269,6 @@ export function RepairPanel({
             </p>
           )}
         </>
-      )}
-
-      {error && (
-        <p role="alert" className="mt-3 text-xs leading-5 text-[#98485c]">
-          {error}
-        </p>
       )}
     </GlassCard>
   );

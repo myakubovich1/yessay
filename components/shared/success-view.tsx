@@ -7,6 +7,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { trackEvent } from "@/lib/analytics";
 import { grantAccess } from "@/lib/storage/local-access";
 import {
+  saveCheckoutReference,
   saveFixGrant,
   type StoredFixGrant,
 } from "@/lib/storage/local-entitlements";
@@ -63,6 +64,13 @@ export function SuccessView({
 
         grantAccess(data.product, data.reportId);
         if (data.fixGrant) saveFixGrant(data.fixGrant);
+        if (sessionId && !data.demo) {
+          saveCheckoutReference({
+            sessionId,
+            product: data.product,
+            savedAt: Date.now(),
+          });
+        }
         trackEvent("purchase_verified", {
           product: data.product,
           via: data.via || (data.demo ? "demo" : "stripe"),

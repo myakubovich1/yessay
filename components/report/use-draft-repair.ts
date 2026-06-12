@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { trackEvent } from "@/lib/analytics";
-import { getFixGrant } from "@/lib/storage/local-entitlements";
+import { hasActiveFullAccess } from "@/lib/storage/local-access";
+import {
+  getFixGrant,
+  refreshFixGrantFromCheckout,
+} from "@/lib/storage/local-entitlements";
 import {
   getRegenerationCount,
   recordRegeneration,
@@ -29,6 +33,13 @@ export function useDraftRepair(
   const refresh = () => setNonce((nonce) => nonce + 1);
 
   const grant = report ? getFixGrant(report.id) : null;
+  /**
+   * Plan holders get repair as part of the experience: an active plan counts
+   * as included even when the signed token is missing or expired (purchases
+   * made before the repair feature, monthly renewals). The token is then
+   * re-minted by re-verifying the stored checkout session with Stripe.
+   */
+  const included = Boolean(grant) || hasActiveFullAccess();
   const regenerations = report ? getRegenerationCount(report.id) : 0;
   const repairability: Repairability = !report?.source
     ? "no_source"
@@ -38,11 +49,24 @@ export function useDraftRepair(
 
   const generate = async (isRegeneration: boolean) => {
     if (!report?.source || generating) return;
-    const activeGrant = getFixGrant(report.id);
-    if (!activeGrant) return;
 
     setGenerating(true);
     setError("");
+    let activeGrant = getFixGrant(report.id);
+    if (!activeGrant) {
+      // Plan holder without a valid token: re-verify the stored checkout
+      // session with Stripe and mint a fresh one.
+      activeGrant = await refreshFixGrantFromCheckout();
+      refresh();
+    }
+    if (!activeGrant) {
+      setGenerating(false);
+      setError(
+        "We couldn't confirm your plan on this device. Open your most recent Yessay receipt link, or re-enter your promo code below.",
+      );
+      return;
+    }
+
     try {
       const response = await fetch("/api/fix-essay", {
         method: "POST",
@@ -88,6 +112,7 @@ export function useDraftRepair(
 
   return {
     grant,
+    included,
     generating,
     error,
     generate,
