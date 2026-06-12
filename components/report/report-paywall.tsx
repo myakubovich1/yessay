@@ -1,4 +1,5 @@
 import {
+  ArrowRight,
   CalendarCheck2,
   Check,
   LoaderCircle,
@@ -25,6 +26,7 @@ export function ReportPaywall({
   reportId?: string;
 }) {
   const annual = getPricingPlan("annual");
+  const monthly = getPricingPlan("monthly");
   const alternatives = alternativeProducts
     .map(getPricingPlan)
     .filter((plan) => plan !== undefined);
@@ -57,6 +59,9 @@ export function ReportPaywall({
           </div>
           <p className="report-paywall__plan-name">Annual access</p>
           <div className="report-paywall__price">
+            {annual.monthlyEquivalent && monthly && (
+              <s className="report-paywall__price-anchor">{monthly.price}</s>
+            )}
             <strong>{annual.monthlyEquivalent || annual.price}</strong>
             <span>{annual.monthlyEquivalent ? "/month" : annual.cadence}</span>
           </div>
@@ -104,7 +109,11 @@ export function ReportPaywall({
             >
               <span>
                 <strong>{plan.name}</strong>
-                <small>{plan.billingNote}</small>
+                <small>
+                  {plan.product === "monthly"
+                    ? `${plan.billingNote} · 2.4× the annual rate`
+                    : plan.billingNote}
+                </small>
               </span>
               <span className="report-paywall__alternative-price">
                 {loading === plan.product ? (
@@ -115,6 +124,9 @@ export function ReportPaywall({
                     {plan.cadence && <small>{plan.cadence}</small>}
                   </>
                 )}
+              </span>
+              <span className="report-paywall__alternative-go" aria-hidden>
+                <ArrowRight size={14} />
               </span>
             </button>
           ))}
