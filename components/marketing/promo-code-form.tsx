@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { LoaderCircle, TicketPercent } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 import { getReports } from "@/lib/storage/local-reports";
 import { cn } from "@/lib/utils";
 
@@ -65,6 +66,7 @@ export function PromoCodeForm({
       if (!response.ok || !data.url) {
         throw new Error(data.error || "That promo code isn't valid.");
       }
+      trackEvent("promo_redeemed", { location: variant });
       window.location.href = data.url;
     } catch (redeemError) {
       setError(

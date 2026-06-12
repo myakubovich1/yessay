@@ -10,6 +10,7 @@ import {
   Wand2,
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
+import { trackEvent } from "@/lib/analytics";
 import { getPricingPlan } from "@/lib/pricing";
 import { grantAccess } from "@/lib/storage/local-access";
 import {
@@ -80,6 +81,10 @@ export function RepairPanel({
       }
       grantAccess(grantData.product, grantData.reportId);
       saveFixGrant(grantData.fixGrant);
+      trackEvent("promo_redeemed", {
+        location: "repair_panel",
+        product: grantData.product,
+      });
       repair.refresh();
     } catch (redeemError) {
       setPromoError(

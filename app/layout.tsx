@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppViewport } from "@/components/shared/app-viewport";
 import { Navbar } from "@/components/shared/navbar";
@@ -48,6 +49,7 @@ export default function RootLayout({
       <body>
         <Navbar />
         <AppViewport>{children}</AppViewport>
+        <Analytics />
       </body>
     </html>
   );

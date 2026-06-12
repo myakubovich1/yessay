@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { AcademicIntegrityNotice } from "@/components/shared/academic-integrity-notice";
 import { GlassCard } from "@/components/ui/glass-card";
+import { trackEvent } from "@/lib/analytics";
 import { sampleInput } from "@/lib/analysis/mock-analysis";
 import {
   consumeReportCredit,
@@ -187,6 +188,10 @@ export function CheckFlow() {
         },
       };
       saveReport(report);
+      trackEvent("analysis_completed", {
+        assignmentType: form.assignmentType,
+        unlocked: !report.locked,
+      });
       if (!fullAccess && reportCredit && consumeReportCredit()) {
         setReportCredit(false);
       }

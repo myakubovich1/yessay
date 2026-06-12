@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { trackEvent } from "@/lib/analytics";
 import { pricingPlans } from "@/lib/pricing";
 import { getReports } from "@/lib/storage/local-reports";
 import type { PricingProduct } from "@/lib/types";
@@ -38,6 +39,7 @@ export function PricingGrid() {
 
     setLoading(product);
     setError("");
+    trackEvent("checkout_started", { product, location: "pricing" });
     try {
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",

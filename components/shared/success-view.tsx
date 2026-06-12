@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, ArrowRight, Check, LoaderCircle } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
+import { trackEvent } from "@/lib/analytics";
 import { grantAccess } from "@/lib/storage/local-access";
 import {
   saveFixGrant,
@@ -62,6 +63,10 @@ export function SuccessView({
 
         grantAccess(data.product, data.reportId);
         if (data.fixGrant) saveFixGrant(data.fixGrant);
+        trackEvent("purchase_verified", {
+          product: data.product,
+          via: data.via || (data.demo ? "demo" : "stripe"),
+        });
         // Subscriptions unlock every saved report; land on the latest one
         // instead of sending the buyer back through the check form.
         const reportId =

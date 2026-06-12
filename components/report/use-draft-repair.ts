@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 import { getFixGrant } from "@/lib/storage/local-entitlements";
 import {
   getRegenerationCount,
@@ -63,6 +64,10 @@ export function useDraftRepair(
       }
       saveRevision(data);
       if (isRegeneration) recordRegeneration(report.id);
+      trackEvent("draft_repair_generated", {
+        product: activeGrant.product,
+        regeneration: isRegeneration,
+      });
       onRevision(data);
       // Bring the freshly rendered revision into view.
       window.setTimeout(() => {

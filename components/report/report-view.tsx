@@ -26,6 +26,7 @@ import {
   Target,
   Unlock,
 } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 import { createSampleReport } from "@/lib/analysis/mock-analysis";
 import { singleReportPrice } from "@/lib/pricing";
 import {
@@ -124,6 +125,7 @@ export function ReportView({ reportId }: { reportId: string }) {
   const checkout = async (product: PricingProduct) => {
     setCheckoutLoading(product);
     setCheckoutError("");
+    trackEvent("checkout_started", { product, location: "report" });
     try {
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
