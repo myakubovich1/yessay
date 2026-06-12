@@ -57,10 +57,14 @@ export function ReportPaywall({
           </div>
           <p className="report-paywall__plan-name">Annual access</p>
           <div className="report-paywall__price">
-            <strong>{annual.price}</strong>
-            <span>{annual.cadence}</span>
+            <strong>{annual.monthlyEquivalent || annual.price}</strong>
+            <span>{annual.monthlyEquivalent ? "/month" : annual.cadence}</span>
           </div>
-          <p className="report-paywall__saving">{annual.valueNote}</p>
+          <p className="report-paywall__saving">
+            {annual.monthlyEquivalent
+              ? `Billed yearly as ${annual.price} · ${annual.valueNote}`
+              : annual.valueNote}
+          </p>
           <ul>
             {annual.features.map((feature) => (
               <li key={feature}>

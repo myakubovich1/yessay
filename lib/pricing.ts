@@ -20,6 +20,8 @@ export type PricingPlan = {
   name: string;
   price: string;
   cadence?: string;
+  /** Per-month framing for annual billing, e.g. "$4.17". */
+  monthlyEquivalent?: string;
   description: string;
   features: string[];
   product?: PricingProduct;
@@ -35,6 +37,7 @@ export const pricingPlans: PricingPlan[] = [
     name: "Annual",
     price: "$49.99",
     cadence: "/year",
+    monthlyEquivalent: "$4.17",
     description: "Unlimited reports through the full academic year.",
     features: [
       "Unlimited essay checks",
@@ -47,7 +50,7 @@ export const pricingPlans: PricingPlan[] = [
     label: "Best value",
     accent: "lime",
     valueNote: "Save 58% vs monthly",
-    billingNote: "Renews yearly · about $4.17/month",
+    billingNote: "One $49.99 payment today · renews yearly",
   },
   {
     name: "Single Report",
