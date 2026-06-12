@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, LoaderCircle } from "lucide-react";
+import { Check, Clock3, LoaderCircle } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 
 const tasks = [
@@ -14,15 +14,31 @@ const tasks = [
   "Preparing your Yessay report",
 ];
 
+/**
+ * The analysis call reports no real progress, so the bar and steps are
+ * driven by elapsed time on an asymptotic curve: progress = 1 - e^(-t/tau).
+ * Steps split the curve evenly, which spaces them naturally — early steps
+ * move quickly, later ones take progressively longer, and nothing parks at
+ * 100% while the request is still running.
+ */
+const TAU_MS = 35000;
+const MAX_PROGRESS = 0.96;
+const LONG_RUN_MS = 75000;
+
 export function LoadingAnalysis() {
-  const [active, setActive] = useState(0);
+  const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
+    const startedAt = Date.now();
     const timer = window.setInterval(() => {
-      setActive((current) => Math.min(current + 1, tasks.length - 1));
-    }, 850);
+      setElapsed(Date.now() - startedAt);
+    }, 250);
     return () => window.clearInterval(timer);
   }, []);
+
+  const progress = Math.min(1 - Math.exp(-elapsed / TAU_MS), MAX_PROGRESS);
+  const active = Math.min(Math.floor(progress * tasks.length), tasks.length - 1);
+  const longRunning = elapsed > LONG_RUN_MS;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#f6f1e8]/88 px-4 backdrop-blur-xl">
@@ -36,14 +52,16 @@ export function LoadingAnalysis() {
               Reviewing your draft
             </p>
             <p className="text-sm text-[#6c7065]">
-              Building a focused revision plan
+              {longRunning
+                ? "Still working — long drafts take a little more time"
+                : "Building a focused revision plan"}
             </p>
           </div>
         </div>
         <div className="mt-7 h-2 overflow-hidden rounded-full bg-[#dedbd2]">
           <motion.div
             className="h-full rounded-full bg-gradient-to-r from-[#b8ed42] via-[#c8f85a] to-[#ff8b5e]"
-            animate={{ width: `${((active + 1) / tasks.length) * 100}%` }}
+            animate={{ width: `${progress * 100}%` }}
             transition={{ duration: 0.45, ease: "easeOut" }}
           />
         </div>
@@ -80,6 +98,10 @@ export function LoadingAnalysis() {
             </div>
           ))}
         </div>
+        <p className="mt-6 flex items-center justify-center gap-1.5 border-t border-[#171912]/10 pt-5 text-center text-xs leading-5 text-[#85887f]">
+          <Clock3 size={13} className="shrink-0" />
+          A thorough review can take up to a few minutes. Keep this page open.
+        </p>
       </GlassCard>
     </div>
   );
