@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, ArrowRight, Check, LoaderCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Check,
+  LoaderCircle,
+  Receipt,
+} from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { trackEvent } from "@/lib/analytics";
 import { grantAccess } from "@/lib/storage/local-access";
@@ -15,6 +21,7 @@ import { getReports } from "@/lib/storage/local-reports";
 import type { PricingProduct } from "@/lib/types";
 
 type VerificationState =
+  | { status: "idle" }
   | { status: "verifying" }
   | {
       status: "success";
@@ -32,11 +39,19 @@ export function SuccessView({
   sessionId?: string;
   demoToken?: string;
 }) {
-  const [verification, setVerification] = useState<VerificationState>({
-    status: "verifying",
-  });
+  // No checkout params means the page was opened directly (bookmark, refresh,
+  // back button) — show a calm neutral state instead of calling verify and
+  // rendering an error.
+  const hasCheckout = Boolean(sessionId || demoToken);
+  const [verification, setVerification] = useState<VerificationState>(
+    hasCheckout ? { status: "verifying" } : { status: "idle" },
+  );
 
   useEffect(() => {
+    if (!hasCheckout) {
+      setVerification({ status: "idle" });
+      return;
+    }
     const controller = new AbortController();
 
     async function verifyCheckout() {
@@ -97,7 +112,33 @@ export function SuccessView({
 
     void verifyCheckout();
     return () => controller.abort();
-  }, [demoToken, sessionId]);
+  }, [demoToken, sessionId, hasCheckout]);
+
+  if (verification.status === "idle") {
+    return (
+      <GlassCard className="mx-auto max-w-xl px-6 py-12 text-center sm:px-10">
+        <span className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-[#171912] bg-[#c8f85a] text-[#171912] shadow-[0_4px_0_#171912]">
+          <Receipt size={24} />
+        </span>
+        <h1 className="mt-6 text-3xl font-black tracking-[-0.04em] text-[#171912]">
+          Nothing to confirm here
+        </h1>
+        <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-[#6c7065]">
+          This page confirms a checkout. Start a new essay check or jump back
+          into your saved reports.
+        </p>
+        <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <Link href="/check" className="primary-button">
+            Check an essay
+            <ArrowRight size={16} />
+          </Link>
+          <Link href="/dashboard" className="secondary-button">
+            View my reports
+          </Link>
+        </div>
+      </GlassCard>
+    );
+  }
 
   if (verification.status === "verifying") {
     return (
