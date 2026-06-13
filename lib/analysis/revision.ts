@@ -89,11 +89,16 @@ export async function createOpenAIRevision(
 ): Promise<DraftRevision> {
   const client = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
-    timeout: 55_000,
-    maxRetries: 1,
+    // The full model is slower than the analysis mini; give it room and don't
+    // retry (a retry would blow the function's time budget).
+    timeout: 280_000,
+    maxRetries: 0,
   });
+  // Rewriting with tracked changes is harder than the analysis pass, so
+  // repair runs on the full model (not the mini used for analysis) with
+  // deeper reasoning. Override with OPENAI_REPAIR_MODEL if needed.
   const response = await client.responses.parse({
-    model: process.env.OPENAI_MODEL || "gpt-5.4-mini",
+    model: process.env.OPENAI_REPAIR_MODEL || "gpt-5.4",
     store: false,
     reasoning: { effort: "medium" },
     input: [

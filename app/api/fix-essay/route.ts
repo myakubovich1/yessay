@@ -2,7 +2,9 @@ import { z } from "zod";
 import { createMockRevision, createOpenAIRevision } from "@/lib/analysis/revision";
 import { verifyFixEntitlementToken } from "@/lib/payments/entitlement-token";
 
-export const maxDuration = 60;
+// The full repair model can take a couple of minutes; needs a Vercel plan
+// that allows extended function duration (Pro/Fluid). Hobby caps at 60s.
+export const maxDuration = 300;
 
 const fixSchema = z.object({
   entitlementToken: z.string().min(10).max(4000),
