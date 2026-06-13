@@ -1,3 +1,8 @@
+import {
+  MAX_DRAFT_WORDS,
+  OVER_LIMIT_MESSAGE,
+  countWords,
+} from "@/lib/analysis/limits";
 import { createMockReport } from "@/lib/analysis/mock-analysis";
 import { createOpenAIReport } from "@/lib/analysis/openai-analysis";
 import { analysisInputSchema } from "@/lib/analysis/schema";
@@ -25,6 +30,10 @@ export async function POST(request: Request) {
         { error: "Add the rubric or select “I don't have a rubric.”" },
         { status: 400 },
       );
+    }
+
+    if (countWords(parsed.data.draft) > MAX_DRAFT_WORDS) {
+      return Response.json({ error: OVER_LIMIT_MESSAGE }, { status: 413 });
     }
 
     if (process.env.OPENAI_API_KEY) {

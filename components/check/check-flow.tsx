@@ -19,6 +19,11 @@ import Link from "next/link";
 import { AcademicIntegrityNotice } from "@/components/shared/academic-integrity-notice";
 import { GlassCard } from "@/components/ui/glass-card";
 import { trackEvent } from "@/lib/analytics";
+import {
+  MAX_DRAFT_WORDS,
+  OVER_LIMIT_MESSAGE,
+  countWords,
+} from "@/lib/analysis/limits";
 import { sampleInput } from "@/lib/analysis/mock-analysis";
 import { deadlineFromTime, formatRemaining, hoursUntil } from "@/lib/deadline";
 import { redeemPromoCode } from "@/lib/payments/redeem-promo";
@@ -133,6 +138,10 @@ export function CheckFlow() {
     }
     if (step === 3 && form.draft.trim().length < 80) {
       setError("Paste a longer draft before analyzing.");
+      return false;
+    }
+    if (step === 3 && countWords(form.draft) > MAX_DRAFT_WORDS) {
+      setError(OVER_LIMIT_MESSAGE);
       return false;
     }
     setError("");
@@ -458,6 +467,24 @@ export function CheckFlow() {
                     className="min-h-80"
                     onChange={(event) => setField("draft", event.target.value)}
                   />
+                  {countWords(form.draft) > MAX_DRAFT_WORDS ? (
+                    <p
+                      role="alert"
+                      className="mt-2 rounded-xl border border-[#efcfd6] bg-[#fbebee] px-3.5 py-2.5 text-xs leading-5 text-[#934157]"
+                    >
+                      This draft is{" "}
+                      {countWords(form.draft).toLocaleString()} words —
+                      over the {MAX_DRAFT_WORDS.toLocaleString()}-word limit
+                      for one analysis. Split it into sections and check each
+                      separately.
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-xs leading-5 text-[#85887f]">
+                      Up to {MAX_DRAFT_WORDS.toLocaleString()} words per check.
+                      Longer essays should be split into sections and analyzed
+                      one at a time.
+                    </p>
+                  )}
                   <div className="mt-4 rounded-[18px] border border-[#171912] bg-[#cfc3ff] shadow-[0_4px_0_#171912]">
                     <label className="flex cursor-pointer items-center justify-between gap-4 p-4">
                       <span className="flex items-start gap-3">
