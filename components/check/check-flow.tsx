@@ -16,7 +16,6 @@ import {
   RotateCcw,
 } from "lucide-react";
 import Link from "next/link";
-import { AcademicIntegrityNotice } from "@/components/shared/academic-integrity-notice";
 import { GlassCard } from "@/components/ui/glass-card";
 import { trackEvent } from "@/lib/analytics";
 import {
@@ -41,6 +40,7 @@ import { getReports, saveReport } from "@/lib/storage/local-reports";
 import type { AnalysisInput, AnalysisReport } from "@/lib/types";
 import { assignmentTypes, citationStyles } from "@/lib/types";
 import { LoadingAnalysis } from "./loading-analysis";
+import { PreviewTeaser } from "./preview-teaser";
 import { Stepper } from "./stepper";
 import { TextAreaWithCounter } from "./text-area-with-counter";
 
@@ -645,32 +645,28 @@ export function CheckFlow() {
         </GlassCard>
 
         <aside className="space-y-4 lg:sticky lg:top-24">
-          <AcademicIntegrityNotice compact />
-          <GlassCard subtle className="p-5">
-            <p className="text-sm font-extrabold text-[#171912]">
-              What you see before payment
-            </p>
-            <p className="mt-2 text-sm leading-6 text-[#6c7065]">
-              Your first analysis preview is free. You&apos;ll see the readiness
-              score and issue count; exact findings, revision steps, and
-              additional analyses require paid access.
-            </p>
-          </GlassCard>
+          <PreviewTeaser />
           <GlassCard subtle className="p-5">
             <p className="text-sm font-extrabold text-[#171912]">
               What Yessay checks
             </p>
-            <ul className="mt-4 space-y-3 text-sm leading-5 text-[#6c7065]">
+            <ul className="mt-4 space-y-2.5 text-sm leading-5 text-[#6c7065]">
               {[
                 "Prompt and rubric alignment",
                 "Thesis clarity and organization",
                 "Evidence and citation signals",
                 "Priority fixes and final checklist",
-              ].map((item) => (
-                <li key={item} className="flex gap-2">
+              ].map((item, index) => (
+                <motion.li
+                  key={item}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.15 + index * 0.08, duration: 0.3 }}
+                  className="flex gap-2"
+                >
                   <span className="mt-2 size-1.5 shrink-0 rounded-full bg-[#8caf25]" />
                   {item}
-                </li>
+                </motion.li>
               ))}
             </ul>
           </GlassCard>
