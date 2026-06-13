@@ -74,6 +74,10 @@ const genreDefaults: Record<
     centralClaimLabel: "Purpose",
     evidenceLabel: "Support & Rationale",
   },
+  "College Application Essay": {
+    centralClaimLabel: "Central Story",
+    evidenceLabel: "Detail & Reflection",
+  },
   "Scholarship Essay": {
     centralClaimLabel: "Central Narrative",
     evidenceLabel: "Examples & Reflection",

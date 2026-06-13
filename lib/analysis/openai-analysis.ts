@@ -29,6 +29,7 @@ The report must help the student decide what to revise first. It must not write 
 - Case studies and business memos should prioritize purpose or recommendation, case facts, audience, and rationale.
 - Lab reports should prioritize research question, methods, results, and interpretation; do not apply a conventional argumentative-thesis standard.
 - Scholarship essays should prioritize central narrative, specificity, reflection, and connection to the requested theme.
+- College application essays (personal statements, Common App essays, and supplemental essays) should prioritize a clear central story or theme about the applicant, vivid concrete detail, authentic personal voice, genuine reflection and insight, and direct fit with the prompt. Treat them as narrative writing: outside-source and citation criteria are not applicable unless the prompt explicitly requires them, and do not impose a conventional argumentative-thesis standard. Respect typical admissions length limits (for example, the Common App personal statement is about 650 words) when the prompt or word count implies them.
 </genre_rules>
 
 <assessment_rules>

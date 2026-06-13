@@ -7,6 +7,7 @@ export const assignmentTypes = [
   "Case Study",
   "Lab Report",
   "Business Memo",
+  "College Application Essay",
   "Scholarship Essay",
   "Other",
 ] as const;
