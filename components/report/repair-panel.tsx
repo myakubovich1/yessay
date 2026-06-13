@@ -12,11 +12,7 @@ import {
 import { GlassCard } from "@/components/ui/glass-card";
 import { trackEvent } from "@/lib/analytics";
 import { getPricingPlan } from "@/lib/pricing";
-import { grantAccess } from "@/lib/storage/local-access";
-import {
-  saveFixGrant,
-  type StoredFixGrant,
-} from "@/lib/storage/local-entitlements";
+import { redeemPromoCode } from "@/lib/payments/redeem-promo";
 import type { DraftRevision, PricingProduct } from "@/lib/types";
 import type { DraftRepairState } from "./use-draft-repair";
 
@@ -55,43 +51,13 @@ export function RepairPanel({
     setPromoLoading(true);
     setPromoError("");
     try {
-      const redeemed = await fetch("/api/redeem-promo-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: promoCode.trim(), reportId }),
-      });
-      const redeemData = (await redeemed.json()) as {
-        url?: string;
-        error?: string;
-      };
-      if (!redeemed.ok || !redeemData.url) {
-        throw new Error(redeemData.error || "That promo code isn't valid.");
-      }
-      const demoToken = new URLSearchParams(
-        redeemData.url.split("?")[1] || "",
-      ).get("demo_token");
-      const verified = await fetch("/api/verify-checkout-session", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ demoToken }),
-      });
-      const grantData = (await verified.json()) as {
-        product?: PricingProduct;
-        reportId?: string;
-        fixGrant?: StoredFixGrant;
-        error?: string;
-      };
-      if (!verified.ok || !grantData.product) {
-        throw new Error(grantData.error || "That promo code isn't valid.");
-      }
-      if (!grantData.fixGrant) {
+      const redemption = await redeemPromoCode(promoCode.trim(), reportId);
+      if (!redemption.fixGrant) {
         throw new Error("That code doesn't include draft repair.");
       }
-      grantAccess(grantData.product, grantData.reportId);
-      saveFixGrant(grantData.fixGrant);
       trackEvent("promo_redeemed", {
         location: "repair_panel",
-        product: grantData.product,
+        product: redemption.product,
       });
       repair.refresh();
     } catch (redeemError) {

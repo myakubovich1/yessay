@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, Clock3, LoaderCircle } from "lucide-react";
+import { Check, Clock3, LoaderCircle, Sparkles } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 
 const tasks = [
@@ -25,7 +25,7 @@ const TAU_MS = 35000;
 const MAX_PROGRESS = 0.96;
 const LONG_RUN_MS = 75000;
 
-export function LoadingAnalysis() {
+export function LoadingAnalysis({ notice }: { notice?: string }) {
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
@@ -43,6 +43,12 @@ export function LoadingAnalysis() {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#f6f1e8]/88 px-4 backdrop-blur-xl">
       <GlassCard className="w-full max-w-lg p-7 sm:p-9">
+        {notice && (
+          <p className="mb-5 inline-flex items-center gap-1.5 rounded-full border border-[#171912] bg-[#c8f85a] px-3 py-1 text-xs font-extrabold text-[#171912]">
+            <Sparkles size={13} />
+            {notice}
+          </p>
+        )}
         <div className="flex items-center gap-4">
           <div className="flex size-12 items-center justify-center rounded-2xl border border-[#171912] bg-[#c8f85a] text-[#171912] shadow-[0_4px_0_#171912]">
             <LoaderCircle className="animate-spin" size={23} />

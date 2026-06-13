@@ -6,19 +6,22 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
-  CalendarDays,
   CheckCircle2,
+  CalendarDays,
   FileInput,
   FlaskConical,
+  LoaderCircle,
   LockKeyhole,
   MoonStar,
   RotateCcw,
 } from "lucide-react";
+import Link from "next/link";
 import { AcademicIntegrityNotice } from "@/components/shared/academic-integrity-notice";
 import { GlassCard } from "@/components/ui/glass-card";
 import { trackEvent } from "@/lib/analytics";
 import { sampleInput } from "@/lib/analysis/mock-analysis";
 import { deadlineFromTime, formatRemaining, hoursUntil } from "@/lib/deadline";
+import { redeemPromoCode } from "@/lib/payments/redeem-promo";
 import {
   consumeReportCredit,
   hasActiveFullAccess,
@@ -58,6 +61,11 @@ export function CheckFlow() {
   const [fullAccess, setFullAccess] = useState(false);
   const [reportCredit, setReportCredit] = useState(false);
   const [previewUsed, setPreviewUsed] = useState(false);
+  const [gateOpen, setGateOpen] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState("");
+  const [unlockNotice, setUnlockNotice] = useState("");
   const hasContent = Boolean(
     form.assignmentPrompt.trim() || form.rubric?.trim() || form.draft.trim(),
   );
@@ -157,12 +165,19 @@ export function CheckFlow() {
     setRestored(false);
   };
 
-  const analyze = async () => {
+  const analyze = async (access?: {
+    fullAccess?: boolean;
+    reportCredit?: boolean;
+    notice?: string;
+  }) => {
     if (!validateStep()) return;
-    if (previewUsed && !fullAccess && !reportCredit) {
-      router.push("/pricing");
+    const effectiveFullAccess = access?.fullAccess ?? fullAccess;
+    const effectiveReportCredit = access?.reportCredit ?? reportCredit;
+    if (previewUsed && !effectiveFullAccess && !effectiveReportCredit) {
+      setGateOpen(true);
       return;
     }
+    setUnlockNotice(access?.notice || "");
     setLoading(true);
     setError("");
     // Deadline math happens on-device; the API only sees hours remaining.
@@ -186,7 +201,9 @@ export function CheckFlow() {
       }
       const report: AnalysisReport = {
         ...data,
-        locked: fullAccess || reportCredit ? false : data.locked,
+        locked: effectiveFullAccess || effectiveReportCredit
+          ? false
+          : data.locked,
         deadlineAt: deadline?.toISOString(),
         source: {
           assignmentPrompt: form.assignmentPrompt,
@@ -201,7 +218,7 @@ export function CheckFlow() {
         assignmentType: form.assignmentType,
         unlocked: !report.locked,
       });
-      if (!fullAccess && reportCredit && consumeReportCredit()) {
+      if (!effectiveFullAccess && effectiveReportCredit && consumeReportCredit()) {
         setReportCredit(false);
       }
       setPreviewUsed(true);
@@ -217,9 +234,51 @@ export function CheckFlow() {
     }
   };
 
+  const redeemInline = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!promoCode.trim() || promoLoading) return;
+    // Don't spend a code on a draft that won't pass validation.
+    if (!validateStep()) return;
+
+    setPromoLoading(true);
+    setPromoError("");
+    try {
+      const redemption = await redeemPromoCode(promoCode.trim());
+      if (redemption.product === "draft_repair") {
+        setPromoError(
+          "That code unlocks AI draft repair, not a new analysis. Use it on a report's repair panel.",
+        );
+        setPromoLoading(false);
+        return;
+      }
+      trackEvent("promo_redeemed", {
+        location: "check",
+        product: redemption.product,
+      });
+      const grantsFullAccess = redemption.product !== "single_report";
+      if (grantsFullAccess) setFullAccess(true);
+      else setReportCredit(true);
+      setPromoCode("");
+      setGateOpen(false);
+      setPromoLoading(false);
+      await analyze({
+        fullAccess: grantsFullAccess,
+        reportCredit: !grantsFullAccess,
+        notice: "Promo applied · access unlocked",
+      });
+    } catch (redeemError) {
+      setPromoError(
+        redeemError instanceof Error
+          ? redeemError.message
+          : "That promo code isn't valid.",
+      );
+      setPromoLoading(false);
+    }
+  };
+
   return (
     <>
-      {loading && <LoadingAnalysis />}
+      {loading && <LoadingAnalysis notice={unlockNotice} />}
       <div className="page-shell grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <GlassCard className="min-h-[650px] p-5 sm:p-8">
           <div className="flex flex-col gap-5 border-b border-[#171912]/12 pb-6 sm:flex-row sm:items-start sm:justify-between">
@@ -462,6 +521,59 @@ export function CheckFlow() {
             </div>
           )}
 
+          {gateOpen && step === 3 && (
+            <div className="mt-5 rounded-2xl border border-[#171912]/15 bg-[#f6f1e8] p-5">
+              <div className="flex items-center gap-2">
+                <LockKeyhole size={15} className="text-[#171912]" />
+                <p className="text-sm font-extrabold text-[#171912]">
+                  Unlock to analyze this draft
+                </p>
+              </div>
+              <p className="mt-1.5 text-xs leading-5 text-[#6c7065]">
+                Have a promo code? Apply it here and your full analysis starts
+                right away.
+              </p>
+              <form onSubmit={redeemInline} className="mt-3 flex gap-2">
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={(event) => setPromoCode(event.target.value)}
+                  placeholder="Enter your code"
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  className="h-11 min-w-0 flex-1 rounded-xl border border-[#171912]/18 bg-white px-3.5 text-sm font-semibold uppercase tracking-wide text-[#171912] placeholder:font-normal placeholder:normal-case placeholder:tracking-normal placeholder:text-[#9a9e93] focus:border-[#617c12] focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={promoLoading || !promoCode.trim()}
+                  className="flex h-11 items-center gap-2 rounded-xl border border-[#171912] bg-[#c8f85a] px-4 text-sm font-extrabold text-[#171912] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {promoLoading ? (
+                    <LoaderCircle size={15} className="animate-spin" />
+                  ) : (
+                    "Apply"
+                  )}
+                </button>
+              </form>
+              {promoError && (
+                <p role="alert" className="mt-2 text-xs leading-5 text-[#98485c]">
+                  {promoError}
+                </p>
+              )}
+              <p className="mt-3 text-xs text-[#6c7065]">
+                Or{" "}
+                <Link
+                  href="/pricing"
+                  className="font-bold text-[#617c12] underline-offset-2 hover:underline"
+                >
+                  see all access options
+                </Link>
+                .
+              </p>
+            </div>
+          )}
+
           <div className="mt-7 flex items-center justify-between border-t border-[#171912]/12 pt-5">
             <button
               type="button"
@@ -487,7 +599,7 @@ export function CheckFlow() {
             ) : (
               <button
                 type="button"
-                onClick={analyze}
+                onClick={() => analyze()}
                 className="primary-button min-h-11"
               >
                 {previewUsed && !fullAccess && !reportCredit ? (
@@ -496,7 +608,7 @@ export function CheckFlow() {
                   <FileInput size={17} />
                 )}
                 {previewUsed && !fullAccess && !reportCredit
-                  ? "Choose Access to Analyze"
+                  ? "Unlock to Analyze"
                   : fullAccess || reportCredit
                     ? "Analyze Full Report"
                     : "Analyze & See My Score"}
