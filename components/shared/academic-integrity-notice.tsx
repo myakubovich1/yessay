@@ -15,10 +15,12 @@ export function AcademicIntegrityNotice({
         <p className="font-extrabold text-[#171912]">
           Built for revision, not cheating.
         </p>
-        <p className="mt-1 text-sm leading-6 text-[#686c61]">
-          Yessay flags possible issues and gives revision direction. It does not
-          write full essays, guarantee grades, or replace your professor&apos;s
-          instructions.
+        <blockquote className="mt-2 border-l-2 border-[#c8f85a] pl-3 text-sm italic leading-6 text-[#4a4e44]">
+          “Humans are tool builders. We build tools that can dramatically
+          amplify our innate human abilities.”
+        </blockquote>
+        <p className="mt-1.5 pl-3 text-xs font-bold not-italic text-[#686c61]">
+          — Steve Jobs
         </p>
       </div>
     </GlassCard>
