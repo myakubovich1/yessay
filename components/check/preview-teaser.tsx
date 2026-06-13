@@ -2,16 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, FileText, Wand2 } from "lucide-react";
+import { FileText, Sparkles, Wand2 } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 
-const RADIUS = 34;
-const CIRC = 2 * Math.PI * RADIUS;
-
 /**
- * Before/after value card: a sickly red "0" and a thriving lime "100", with
- * the 100 emerging from the 0 and counting up. Frames the product as the
- * improvement itself — no paywall, access, or pricing copy.
+ * Before/after value card: a dull "0 as-is" medallion and a glowing "100
+ * ready" medallion, with the 100 springing out and counting up. Frames the
+ * product as the improvement itself — no paywall, access, or pricing copy.
  */
 export function PreviewTeaser() {
   const reduced = useReducedMotion() ?? false;
@@ -31,7 +28,7 @@ export function PreviewTeaser() {
       };
       frame = requestAnimationFrame(tick);
     };
-    // Let the red "0" register before the 100 climbs out of it.
+    // Let the dull "0" register before the 100 climbs out of it.
     const timeout = window.setTimeout(run, 550);
     return () => {
       cancelAnimationFrame(frame);
@@ -45,21 +42,14 @@ export function PreviewTeaser() {
         With Yessay
       </p>
 
-      <div className="mt-5 flex items-center justify-center gap-2.5">
+      <div className="mt-6 flex items-center justify-center gap-1">
         <ScoreCircle value={0} variant="bad" />
-        <motion.span
-          initial={reduced ? false : { opacity: 0, x: -5 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.45, duration: 0.4 }}
-          className="text-[#9aa08c]"
-        >
-          <ArrowRight size={20} strokeWidth={2.5} />
-        </motion.span>
+        <TransitionArrow reduced={reduced} />
         <ScoreCircle value={score} variant="good" emerge reduced={reduced} />
       </div>
 
-      <p className="mt-5 text-center text-sm font-bold text-[#3c4133]">
-        Improve it from <span className="text-[#cf3c2d]">0</span> to{" "}
+      <p className="mt-6 text-center text-sm font-bold text-[#3c4133]">
+        Improve it from <span className="text-[#c75a48]">0</span> to{" "}
         <span className="text-[#5a7034]">100</span>
       </p>
 
@@ -87,55 +77,56 @@ function ScoreCircle({
   reduced?: boolean;
 }) {
   const good = variant === "good";
+  const diameter = good ? 96 : 80;
+
   return (
     <motion.div
-      className="relative size-[84px]"
-      initial={emerge && !reduced ? { scale: 0.5, opacity: 0 } : false}
+      className="relative shrink-0"
+      style={{ width: diameter, height: diameter }}
+      initial={emerge && !reduced ? { scale: 0.4, opacity: 0 } : false}
       animate={emerge ? { scale: 1, opacity: 1 } : undefined}
-      transition={{ delay: 0.45, type: "spring", stiffness: 210, damping: 15 }}
-      style={
-        good
-          ? { filter: "drop-shadow(0 6px 18px rgba(140,200,40,0.42))" }
-          : undefined
-      }
+      transition={{ delay: 0.5, type: "spring", stiffness: 220, damping: 16 }}
     >
-      <svg className="size-full -rotate-90" viewBox="0 0 100 100">
-        <circle
-          cx="50"
-          cy="50"
-          r={RADIUS}
-          fill={good ? "rgba(200,248,90,0.14)" : "rgba(207,60,45,0.08)"}
-          stroke="rgba(23,25,18,0.10)"
-          strokeWidth="9"
+      {/* soft halo behind the "after" medallion */}
+      {good && (
+        <div
+          aria-hidden
+          className="absolute -inset-0.5 rounded-full bg-[#c8f85a] opacity-30 blur-lg"
         />
-        <circle
-          cx="50"
-          cy="50"
-          r={RADIUS}
-          fill="none"
-          stroke={good ? "url(#circle-good)" : "url(#circle-bad)"}
-          strokeLinecap="round"
-          strokeWidth="9"
-          strokeDasharray={CIRC}
-          strokeDashoffset={0}
-        />
-        <defs>
-          <linearGradient id="circle-good" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#8bd41f" />
-            <stop offset="100%" stopColor="#c8f85a" />
-          </linearGradient>
-          <linearGradient id="circle-bad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#c0392b" />
-            <stop offset="100%" stopColor="#e87a55" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
+      )}
+
+      <div
+        className="relative flex size-full flex-col items-center justify-center rounded-full"
+        style={
+          good
+            ? {
+                background:
+                  "radial-gradient(circle at 36% 28%, #f6fde0 0%, #e4f7af 52%, #cdef88 100%)",
+                border: "2px solid #b3da4a",
+                boxShadow:
+                  "inset 0 2px 3px rgba(255,255,255,0.85), inset 0 -6px 12px rgba(120,170,30,0.18), 0 12px 26px rgba(150,210,40,0.4)",
+              }
+            : {
+                background:
+                  "radial-gradient(circle at 36% 28%, #fdf1ee 0%, #f1d9d2 70%, #e7cabf 100%)",
+                border: "2px solid #d8b0a6",
+                boxShadow:
+                  "inset 0 2px 3px rgba(255,255,255,0.7), inset 0 -5px 10px rgba(150,80,65,0.08)",
+              }
+        }
+      >
+        {good && (
+          <Sparkles
+            size={13}
+            className="absolute right-2.5 top-2.5 text-[#6f9018]"
+            fill="currentColor"
+          />
+        )}
         <span
           className={
             good
-              ? "text-2xl font-black tracking-[-0.05em] text-[#171912]"
-              : "text-2xl font-black tracking-[-0.05em] text-[#b23829]"
+              ? "text-[1.7rem] font-black leading-none tracking-[-0.06em] text-[#171912]"
+              : "text-[1.55rem] font-black leading-none tracking-[-0.06em] text-[#a85a4b]"
           }
         >
           {value}
@@ -143,14 +134,49 @@ function ScoreCircle({
         <span
           className={
             good
-              ? "text-[9px] font-bold uppercase tracking-wider text-[#5a7034]"
-              : "text-[9px] font-bold uppercase tracking-wider text-[#bd7a6e]"
+              ? "mt-1 text-[8px] font-extrabold uppercase tracking-[0.18em] text-[#5a7034]"
+              : "mt-1 text-[8px] font-extrabold uppercase tracking-[0.18em] text-[#c3938a]"
           }
         >
           {good ? "ready" : "as-is"}
         </span>
       </div>
     </motion.div>
+  );
+}
+
+function TransitionArrow({ reduced }: { reduced: boolean }) {
+  return (
+    <motion.svg
+      width="40"
+      height="22"
+      viewBox="0 0 40 22"
+      fill="none"
+      className="mx-0.5 shrink-0"
+      initial={reduced ? false : { opacity: 0, x: -6 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.5, duration: 0.45 }}
+    >
+      <defs>
+        <linearGradient id="teaser-arrow" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#d3a99f" />
+          <stop offset="100%" stopColor="#9ed12f" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M3 11 H30"
+        stroke="url(#teaser-arrow)"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <path
+        d="M25 5 L33 11 L25 17"
+        stroke="url(#teaser-arrow)"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </motion.svg>
   );
 }
 
