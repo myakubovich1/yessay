@@ -62,7 +62,13 @@ export default function Home() {
               a score, a clear issue list, and a revision plan you can actually
               finish.
             </p>
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <p className="mt-5 max-w-xl text-sm font-bold leading-6 text-white/80 sm:text-base">
+              Research paper, literary analysis, lab report, or college essay?{" "}
+              <span className="text-[#c8f85a]">
+                Yessay adapts to the assignment.
+              </span>
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link href="/check" className="primary-button px-7">
                 Check my essay
                 <ArrowRight size={18} />
@@ -171,13 +177,17 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#fffdf8] py-20 sm:py-28">
-        <div className="page-shell">
-          <div className="mx-auto max-w-3xl text-center">
+      <section className="report-showcase-section bg-[#fffdf8] py-16 sm:py-24">
+        <div className="page-shell report-showcase">
+          <div className="report-showcase__copy">
             <p className="eyebrow">Everything in one report</p>
-            <h2 className="mt-5 text-balance text-4xl font-black leading-[1.02] tracking-[-0.05em] text-[#171912] sm:text-6xl">
+            <h2 className="mt-5 text-balance text-4xl font-black leading-[1.02] tracking-[-0.05em] text-[#171912] sm:text-5xl lg:text-[3.25rem]">
               Less guessing. More useful signals.
             </h2>
+            <p className="report-showcase__description">
+              See your readiness, strongest signals, and highest-priority fixes
+              in one focused view.
+            </p>
           </div>
           <ReportAnimation />
         </div>

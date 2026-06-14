@@ -40,7 +40,10 @@ export function Navbar() {
     >
       <div className="page-shell mt-3 flex h-14 items-center justify-between rounded-full border border-[#171912]/12 bg-[#fffdf8]/92 px-2.5 shadow-[0_8px_30px_rgba(23,25,18,0.08)] backdrop-blur-xl">
         <BrandMark />
-        <div className="hidden items-center gap-1 sm:flex">
+        <div
+          data-nav-links
+          className="hidden items-center gap-1 sm:flex"
+        >
           {links.map((link) => (
             <Link
               key={link.href}
@@ -58,6 +61,7 @@ export function Navbar() {
         </div>
         <div className="flex items-center gap-2">
           <button
+            data-nav-menu
             type="button"
             onClick={() => setMenuPath(menuOpen ? null : pathname)}
             className={cn(
@@ -73,6 +77,7 @@ export function Navbar() {
             {menuOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
           <Link
+            data-nav-cta
             href={cta.href}
             onClick={() => setMenuPath(null)}
             className={cn(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
@@ -26,9 +26,14 @@ import {
   Target,
   Unlock,
 } from "lucide-react";
-import { trackEvent } from "@/lib/analytics";
+import {
+  getReportFunnelProperties,
+  trackEvent,
+  trackEventOnce,
+} from "@/lib/analytics";
 import { createSampleReport } from "@/lib/analysis/mock-analysis";
 import { singleReportPrice } from "@/lib/pricing";
+import { getReportIssueSummary } from "@/lib/report-signals";
 import {
   getChecklistProgress,
   getReport,
@@ -47,6 +52,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { ChecklistItem } from "./checklist-item";
 import { DeadlineScheduleSection } from "./deadline-schedule";
 import { LockedSection } from "./locked-section";
+import { LockedScoreReveal } from "./locked-score-reveal";
 import { MobileRepairBar } from "./mobile-repair-bar";
 import { RepairPanel } from "./repair-panel";
 import { ReportSection } from "./report-section";
@@ -98,6 +104,7 @@ export function ReportView({ reportId }: { reportId: string }) {
   const [checkoutError, setCheckoutError] = useState("");
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
   const [revision, setRevision] = useState<DraftRevision | null>(null);
+  const paywallRef = useRef<HTMLDivElement>(null);
   const repair = useDraftRepair(report, setRevision);
 
   useEffect(() => {
@@ -114,19 +121,72 @@ export function ReportView({ reportId }: { reportId: string }) {
     return () => window.clearTimeout(timer);
   }, [reportId]);
 
-  const issueCount = useMemo(() => {
-    if (!report) return 0;
-    return (
-      report.missingRequirements.length +
-      report.citationWarnings.length +
-      report.formattingWarnings.length
+  const issueSummary = useMemo(
+    () =>
+      report
+        ? getReportIssueSummary(report)
+        : { total: 0, high: 0, medium: 0, low: 0 },
+    [report],
+  );
+  const issueCount = issueSummary.total;
+
+  useEffect(() => {
+    if (!report?.locked || report.id === "sample-report") return;
+    trackEventOnce(
+      "free_score_viewed",
+      report.id,
+      getReportFunnelProperties(report),
     );
   }, [report]);
 
-  const checkout = async (product: PricingProduct) => {
+  useEffect(() => {
+    if (!report?.locked) return;
+    document.documentElement.dataset.reportFocus = "locked";
+
+    return () => {
+      delete document.documentElement.dataset.reportFocus;
+    };
+  }, [report?.locked]);
+
+  useEffect(() => {
+    if (
+      !report?.locked ||
+      report.id === "sample-report" ||
+      !paywallRef.current
+    ) {
+      return;
+    }
+
+    const target = paywallRef.current;
+    const properties = getReportFunnelProperties(report);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        trackEventOnce("paywall_viewed", report.id, properties);
+        observer.disconnect();
+      },
+      { threshold: 0.35 },
+    );
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [report]);
+
+  const checkout = async (
+    product: PricingProduct,
+    location = "report_paywall",
+  ) => {
     setCheckoutLoading(product);
     setCheckoutError("");
-    trackEvent("checkout_started", { product, location: "report" });
+    const reportProperties = report
+      ? getReportFunnelProperties(report)
+      : undefined;
+    if (report?.locked) {
+      trackEvent("unlock_clicked", {
+        product,
+        location,
+        ...reportProperties,
+      });
+    }
     try {
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
@@ -137,6 +197,11 @@ export function ReportView({ reportId }: { reportId: string }) {
       if (!response.ok || !data.url) {
         throw new Error(data.error || "Checkout is unavailable.");
       }
+      trackEvent("checkout_started", {
+        product,
+        location,
+        ...reportProperties,
+      });
       window.location.href = data.url;
     } catch (error) {
       setCheckoutLoading(null);
@@ -236,16 +301,16 @@ export function ReportView({ reportId }: { reportId: string }) {
             <ArrowLeft size={16} />
             All reports
           </Link>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={copyReport}
-              className="secondary-button min-h-10 px-3.5 text-xs"
-            >
-              <Clipboard size={15} />
-              {visibleCopyLabel}
-            </button>
-            {!report.locked && (
+          {!report.locked && (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={copyReport}
+                className="secondary-button min-h-10 px-3.5 text-xs"
+              >
+                <Clipboard size={15} />
+                {visibleCopyLabel}
+              </button>
               <button
                 type="button"
                 onClick={() => window.print()}
@@ -254,12 +319,19 @@ export function ReportView({ reportId }: { reportId: string }) {
                 <Download size={15} />
                 Download PDF
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         <GlassCard className="overflow-hidden p-0">
-          <div className="grid gap-8 bg-[#fffdf8] p-6 sm:p-8 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div
+            className={cn(
+              "grid gap-8 bg-[#fffdf8] p-6 sm:p-8 lg:items-center",
+              report.locked
+                ? "lg:grid-cols-[minmax(0,1fr)_390px]"
+                : "lg:grid-cols-[1fr_auto]",
+            )}
+          >
             <div>
               <div className="flex flex-wrap items-center gap-3">
                 <StatusBadge status={report.readinessStatus} />
@@ -308,7 +380,14 @@ export function ReportView({ reportId }: { reportId: string }) {
               </div>
             </div>
             <div className="justify-self-center lg:justify-self-end">
-              <ScoreRing score={report.overallScore} />
+              {report.locked ? (
+                <LockedScoreReveal
+                  score={report.overallScore}
+                  issues={issueSummary}
+                />
+              ) : (
+                <ScoreRing score={report.overallScore} />
+              )}
             </div>
           </div>
           <div className="border-t border-[#171912]/12 bg-[#eff9d4] px-6 py-4 text-xs font-medium leading-5 text-[#5f6359] sm:px-8">
@@ -356,11 +435,13 @@ export function ReportView({ reportId }: { reportId: string }) {
         )}
 
         {report.locked && (
-          <ReportPaywall
-            checkout={checkout}
-            loading={checkoutLoading}
-            reportId={reportId}
-          />
+          <div ref={paywallRef}>
+            <ReportPaywall
+              checkout={checkout}
+              loading={checkoutLoading}
+              reportId={reportId}
+            />
+          </div>
         )}
 
         <div className="report-grid mt-6">
@@ -770,9 +851,12 @@ export function ReportView({ reportId }: { reportId: string }) {
 
       {report.locked && (
         <div className="no-print fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-white bg-white/88 p-3 shadow-2xl backdrop-blur-xl lg:hidden">
+          <p className="mb-2 text-center text-[11px] font-extrabold uppercase tracking-[0.09em] text-[#6c7065]">
+            {issueCount} revision signals are ready
+          </p>
           <button
             type="button"
-            onClick={() => checkout("single_report")}
+            onClick={() => checkout("single_report", "mobile_sticky")}
             disabled={checkoutLoading !== null}
             className="primary-button w-full"
           >

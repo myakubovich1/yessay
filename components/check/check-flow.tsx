@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -15,7 +15,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
-import { trackEvent } from "@/lib/analytics";
+import { getReportFunnelProperties, trackEvent } from "@/lib/analytics";
 import {
   MAX_DRAFT_WORDS,
   OVER_LIMIT_MESSAGE,
@@ -207,8 +207,8 @@ export function CheckFlow() {
       };
       saveReport(report);
       trackEvent("analysis_completed", {
-        assignmentType: form.assignmentType,
         unlocked: !report.locked,
+        ...getReportFunnelProperties(report),
       });
       if (!fullAccess && reportCredit && consumeReportCredit()) {
         setReportCredit(false);
@@ -280,15 +280,13 @@ export function CheckFlow() {
             />
           </div>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
-              className="mt-8"
-            >
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="mt-8"
+          >
               {step === 1 && (
                 <div>
                   <TextAreaWithCounter
@@ -477,8 +475,7 @@ export function CheckFlow() {
                   </div>
                 </div>
               )}
-            </motion.div>
-          </AnimatePresence>
+          </motion.div>
 
           {error && (
             <div

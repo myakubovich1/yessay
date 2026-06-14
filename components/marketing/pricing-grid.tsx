@@ -39,7 +39,6 @@ export function PricingGrid() {
 
     setLoading(product);
     setError("");
-    trackEvent("checkout_started", { product, location: "pricing" });
     try {
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
@@ -53,6 +52,7 @@ export function PricingGrid() {
       if (!response.ok || !data.url) {
         throw new Error(data.error || "Checkout is unavailable.");
       }
+      trackEvent("checkout_started", { product, location: "pricing" });
       window.location.href = data.url;
     } catch (checkoutError) {
       setError(

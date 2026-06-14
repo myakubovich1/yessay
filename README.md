@@ -30,7 +30,8 @@ The app works without external credentials:
 - Prompt, rubric, and draft screenshots can be converted to editable text with
   local Tesseract OCR before analysis.
 - Reports are saved in browser `localStorage`.
-- Checkout redirects to `/success?demo=true` and unlocks the relevant report.
+- Checkout uses a short-lived signed demo token and unlocks the relevant report
+  only after server-side verification.
 - `/report/sample-report` provides an immediate full example.
 - `/check` includes a **Use sample** action for end-to-end testing.
 
@@ -101,6 +102,32 @@ matching Stripe price ID for each active test cell. The default variant is
 Supabase environment variables are reserved for replacing the local storage
 adapter with authenticated cloud persistence. The current MVP intentionally
 keeps local storage as the working default.
+
+## Revenue funnel analytics
+
+Vercel Analytics records the conversion sequence without sending draft,
+prompt, rubric, or other user-written content:
+
+- `analysis_completed`
+- `free_score_viewed`
+- `paywall_viewed`
+- `unlock_clicked`
+- `checkout_started`
+- `purchase_verified`
+- `report_unlocked`
+
+The primary metric is:
+
+```text
+purchase_verified / free_score_viewed
+```
+
+Use `unlock_clicked / paywall_viewed` to diagnose offer intent and
+`purchase_verified / checkout_started` to diagnose checkout completion.
+Events include score band, issue totals by severity, assignment type, analysis
+mode, product, location, and viewport where relevant. Reveal, paywall, purchase,
+and unlock events are deduplicated per browser session so refreshes do not
+inflate the funnel.
 
 ## Routes
 

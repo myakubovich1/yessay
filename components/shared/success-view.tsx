@@ -10,14 +10,17 @@ import {
   Receipt,
 } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
-import { trackEvent } from "@/lib/analytics";
+import {
+  getReportFunnelProperties,
+  trackEventOnce,
+} from "@/lib/analytics";
 import { grantAccess } from "@/lib/storage/local-access";
 import {
   saveCheckoutReference,
   saveFixGrant,
   type StoredFixGrant,
 } from "@/lib/storage/local-entitlements";
-import { getReports } from "@/lib/storage/local-reports";
+import { getReport, getReports } from "@/lib/storage/local-reports";
 import type { PricingProduct } from "@/lib/types";
 
 type VerificationState =
@@ -48,10 +51,7 @@ export function SuccessView({
   );
 
   useEffect(() => {
-    if (!hasCheckout) {
-      setVerification({ status: "idle" });
-      return;
-    }
+    if (!hasCheckout) return;
     const controller = new AbortController();
 
     async function verifyCheckout() {
@@ -86,10 +86,6 @@ export function SuccessView({
             savedAt: Date.now(),
           });
         }
-        trackEvent("purchase_verified", {
-          product: data.product,
-          via: data.via || (data.demo ? "demo" : "stripe"),
-        });
         // Subscriptions unlock every saved report; land on the latest one
         // instead of sending the buyer back through the check form.
         const reportId =
@@ -97,6 +93,23 @@ export function SuccessView({
           (data.product !== "single_report"
             ? getReports()[0]?.id
             : undefined);
+        const unlockedReport = reportId ? getReport(reportId) : undefined;
+        const checkoutKey =
+          sessionId || demoToken?.slice(-24) || `${data.product}:${reportId}`;
+        const funnelProperties = unlockedReport
+          ? getReportFunnelProperties(unlockedReport)
+          : {};
+        trackEventOnce("purchase_verified", checkoutKey, {
+          product: data.product,
+          via: data.via || (data.demo ? "demo" : "stripe"),
+          ...funnelProperties,
+        });
+        if (unlockedReport) {
+          trackEventOnce("report_unlocked", unlockedReport.id, {
+            product: data.product,
+            ...funnelProperties,
+          });
+        }
         setVerification({ status: "success", ...data, reportId });
       } catch (error) {
         if (controller.signal.aborted) return;
