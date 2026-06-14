@@ -3,6 +3,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppViewport } from "@/components/shared/app-viewport";
 import { Navbar } from "@/components/shared/navbar";
+import { baseUrl } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://yessay.matsveiyakubovich.com"),
+  metadataBase: new URL(baseUrl),
   title: {
     default: "Yessay: AI Essay Checker",
     template: "%s | Yessay",
