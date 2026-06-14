@@ -57,12 +57,7 @@ export default function Home() {
               Know what to fix{" "}
               <span className="text-[#c8f85a]">before you submit.</span>
             </h1>
-            <p className="mt-7 max-w-xl text-balance text-base leading-7 text-white/68 sm:text-lg">
-              Add the assignment, rubric, and your draft. Yessay turns them into
-              a score, a clear issue list, and a revision plan you can actually
-              finish.
-            </p>
-            <p className="mt-5 max-w-xl text-sm font-bold leading-6 text-white/80 sm:text-base">
+            <p className="mt-7 max-w-xl text-sm font-bold leading-6 text-white/80 sm:text-base">
               Research paper, literary analysis, lab report, or college essay?{" "}
               <span className="text-[#c8f85a]">
                 Yessay adapts to the assignment.
