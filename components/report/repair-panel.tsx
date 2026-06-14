@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   ArrowDown,
+  ArrowRight,
   LoaderCircle,
   RefreshCw,
   Sparkles,
@@ -40,6 +42,7 @@ export function RepairPanel({
     repairability,
   } = repair;
   const viaPlan = included && (!grant || grant.product !== "draft_repair");
+  const isSample = reportId === "sample-report";
   const [showPromo, setShowPromo] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
@@ -80,7 +83,22 @@ export function RepairPanel({
         <p className="font-extrabold text-[#171912]">AI Draft Repair</p>
       </div>
 
-      {repairability === "no_source" ? (
+      {isSample ? (
+        <>
+          <p className="mt-3 text-sm leading-6 text-[#6b7688]">
+            Repair isn&apos;t available on this shared sample. Analyze your own
+            essay and you can have it revised here — every change tracked and
+            explained.
+          </p>
+          <Link href="/check" className="primary-button mt-4 w-full text-sm">
+            <ArrowRight size={15} />
+            Check my essay
+          </Link>
+          <p className="mt-3 text-xs leading-5 text-[#85887f]">
+            Not available for the sample report.
+          </p>
+        </>
+      ) : repairability === "no_source" ? (
         <p className="mt-3 text-sm leading-6 text-[#6b7688]">
           This report predates draft repair. Run a new check on this essay to
           enable it.
@@ -189,7 +207,7 @@ export function RepairPanel({
       {/* Promo entry is useful whenever there is no signed grant yet:
           for non-payers, and for plan holders whose token couldn't be
           re-confirmed on this device. */}
-      {repairability === "ok" && !revision && !grant && (
+      {!isSample && repairability === "ok" && !revision && !grant && (
         <>
           {!showPromo ? (
             <button

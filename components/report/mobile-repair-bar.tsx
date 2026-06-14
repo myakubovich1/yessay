@@ -25,7 +25,13 @@ export function MobileRepairBar({
   checkout: (product: PricingProduct) => void;
   checkoutLoading: PricingProduct | null;
 }) {
-  if (report.locked || repair.repairability !== "ok") return null;
+  // No paid repair bar on the public sample report.
+  if (
+    report.locked ||
+    report.id === "sample-report" ||
+    repair.repairability !== "ok"
+  )
+    return null;
 
   const { included, generating, error, generate } = repair;
 
