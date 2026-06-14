@@ -87,7 +87,7 @@ export function RepairPanel({
         <>
           <p className="mt-3 text-sm leading-6 text-[#6b7688]">
             Repair isn&apos;t available on this shared sample. Analyze your own
-            essay and you can have it revised here — every change tracked and
+            essay and you can have it fixed here — every change tracked and
             explained.
           </p>
           <Link href="/check" className="primary-button mt-4 w-full text-sm">
