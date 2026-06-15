@@ -40,8 +40,14 @@ export function ReportAnimation() {
                 />
               </svg>
               <div className="report-animation__number">
-                <strong>92</strong>
-                <span>Ready</span>
+                <span className="report-animation__number-state report-animation__number-state--pending">
+                  <strong>??</strong>
+                  <span>Scanning</span>
+                </span>
+                <span className="report-animation__number-state report-animation__number-state--ready">
+                  <strong>92</strong>
+                  <span>Ready</span>
+                </span>
               </div>
             </div>
             <p>Essay readiness</p>

@@ -11,6 +11,8 @@
   --lavender: #cfc3ff;
   --cream: #f6f1e8;
   --paper: #fffdf8;
+  --home-section-space: clamp(4.75rem, calc(4rem + 3vw), 6.5rem);
+  --home-content-gap: clamp(2.5rem, calc(2.25rem + 1vw), 3rem);
 }
 
 @theme inline {
@@ -132,6 +134,23 @@ select:focus-visible {
 .page-shell {
   width: min(1180px, calc(100% - 32px));
   margin-inline: auto;
+}
+
+.home-hero {
+  padding-top: clamp(6rem, calc(5.25rem + 3vw), 7rem);
+  padding-bottom: clamp(3rem, calc(2rem + 3vw), 4rem);
+}
+
+.home-section {
+  padding-block: var(--home-section-space);
+}
+
+.home-section--pricing {
+  padding-bottom: 0;
+}
+
+.home-section__content {
+  margin-top: var(--home-content-gap);
 }
 
 .eyebrow {
@@ -2313,21 +2332,34 @@ html[data-report-focus="locked"] [data-nav-menu] {
 .report-animation__number {
   position: absolute;
   inset: 0;
+}
+
+.report-animation__number-state {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   flex-direction: column;
   justify-content: center;
-  animation: report-number 7s ease-in-out infinite;
 }
 
-.report-animation__number strong {
+.report-animation__number-state--pending {
+  animation: report-number-pending 7s ease-in-out infinite;
+}
+
+.report-animation__number-state--ready {
+  opacity: 0;
+  animation: report-number-ready 7s ease-in-out infinite;
+}
+
+.report-animation__number-state strong {
   font-size: 2.65rem;
   font-weight: 900;
   letter-spacing: -0.08em;
   line-height: 0.9;
 }
 
-.report-animation__number span {
+.report-animation__number-state > span {
   margin-top: 8px;
   color: #c8f85a;
   font-size: 0.58rem;
@@ -2547,11 +2579,24 @@ html[data-report-focus="locked"] [data-nav-menu] {
   }
 }
 
-@keyframes report-number {
+@keyframes report-number-pending {
   0%,
   42% {
-    transform: scale(0.86);
-    opacity: 0.15;
+    transform: scale(1);
+    opacity: 1;
+  }
+  52%,
+  100% {
+    transform: scale(0.88);
+    opacity: 0;
+  }
+}
+
+@keyframes report-number-ready {
+  0%,
+  47% {
+    transform: scale(0.82);
+    opacity: 0;
   }
   58%,
   90% {
@@ -2560,7 +2605,7 @@ html[data-report-focus="locked"] [data-nav-menu] {
   }
   100% {
     transform: scale(0.86);
-    opacity: 0.15;
+    opacity: 0;
   }
 }
 
@@ -2629,9 +2674,17 @@ html[data-report-focus="locked"] [data-nav-menu] {
     stroke-dashoffset: 30.66;
   }
 
-  .report-animation__number,
   .report-animation__signal,
   .report-animation__result {
+    transform: none;
+    opacity: 1;
+  }
+
+  .report-animation__number-state--pending {
+    display: none;
+  }
+
+  .report-animation__number-state--ready {
     transform: none;
     opacity: 1;
   }

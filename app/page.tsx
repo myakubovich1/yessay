@@ -44,7 +44,7 @@ const faqs = [
 export default function Home() {
   return (
     <main className="overflow-hidden">
-      <section className="relative bg-[#171912] pb-10 pt-24 text-white sm:pb-14 sm:pt-28">
+      <section className="home-hero relative bg-[#171912] text-white">
         <div className="absolute -left-28 top-28 size-72 rounded-full bg-[#c8f85a]/18 blur-3xl" />
         <div className="absolute -right-20 bottom-0 size-80 rounded-full bg-[#ff8b5e]/16 blur-3xl" />
         <div className="page-shell relative grid min-h-[690px] items-center gap-12 lg:grid-cols-[1.02fr_0.98fr]">
@@ -106,7 +106,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#f6f1e8] py-20 sm:py-28">
+      <section className="home-section bg-[#f6f1e8]">
         <div className="page-shell">
           <div className="grid items-end gap-6 lg:grid-cols-[1fr_0.7fr]">
             <div>
@@ -121,7 +121,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="mt-12 grid gap-5 lg:grid-cols-3">
+          <div className="home-section__content grid gap-5 lg:grid-cols-3">
             {[
               {
                 n: "01",
@@ -173,7 +173,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="report-showcase-section bg-[#fffdf8] py-16 sm:py-24">
+      <section className="home-section report-showcase-section bg-[#fffdf8]">
         <div className="page-shell report-showcase">
           <div className="report-showcase__copy">
             <p className="eyebrow">Everything in one report</p>
@@ -189,7 +189,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#171912] py-20 text-white sm:py-28">
+      <section className="home-section bg-[#171912] text-white">
         <div className="page-shell">
           <div className="grid gap-8 lg:grid-cols-[0.72fr_1.28fr]">
             <div>
@@ -228,7 +228,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#f6f1e8] py-20 sm:py-28">
+      <section className="home-section home-section--pricing bg-[#f6f1e8]">
         <div className="page-shell">
           <div className="mx-auto max-w-3xl text-center">
             <p className="eyebrow">Simple pricing</p>
@@ -240,7 +240,7 @@ export default function Home() {
               one month, or the full academic year.
             </p>
           </div>
-          <div className="pricing-offer-grid mt-12">
+          <div className="home-section__content pricing-offer-grid">
             {pricingPlans.map((plan) => (
               <PricingCard key={plan.name} plan={plan} />
             ))}
@@ -249,7 +249,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-[#f6f1e8] pb-20 sm:pb-28">
+      <section className="home-section bg-[#f6f1e8]">
         <div className="page-shell">
           <div className="tactile-card grid overflow-hidden bg-[#c8f85a] lg:grid-cols-[1fr_auto]">
             <div className="p-8 sm:p-12">
