@@ -1787,6 +1787,49 @@ export const seoLandingPagePaths = seoLandingPages.map((page) => page.slug);
 
 const pagesBySlug = new Map(seoLandingPages.map((page) => [page.slug, page]));
 
+const checksIntroBySlug: Record<string, string> = {
+  "essay-checker":
+    "Start with the prompt and draft, then review the exact areas that usually decide whether an essay feels ready.",
+  "ai-essay-checker":
+    "Use the AI review to catch assignment fit, argument quality, and submission risks before you spend time polishing.",
+  "essay-feedback":
+    "The feedback view separates big revision decisions from smaller wording issues so the next edit is obvious.",
+  "essay-grader":
+    "The readiness score is paired with category signals, so you can see which weakness is pulling the draft down.",
+  "essay-editor":
+    "Editing checks focus on whether your meaning is clear, your paragraphs move in order, and your voice still sounds like you.",
+  "essay-grammar-checker":
+    "Grammar is reviewed alongside essay context, so sentence polish does not distract from larger structure problems.",
+  "improve-my-essay":
+    "Yessay looks for the changes most likely to move the draft forward when you have limited revision time.",
+  "make-my-essay-sound-better":
+    "The review points to wording, tone, and flow issues that make the essay harder to read than it should be.",
+  "essay-checker/argumentative-essay":
+    "Argument pages focus on claim strength, evidence logic, and whether counterarguments are handled convincingly.",
+  "essay-checker/persuasive-essay":
+    "Persuasive checks look at whether the reader can follow your position, trust your support, and understand the takeaway.",
+  "essay-checker/research-paper":
+    "Research-paper checks focus on source integration, citation risks, and whether the evidence is doing analytical work.",
+  "essay-checker/college-essay":
+    "College essay feedback looks for specificity, reflection, and a personal voice that does not get buried under polish.",
+  "essay-checker/personal-statement":
+    "Personal-statement checks focus on narrative focus, insight, and whether the draft reveals something specific about you.",
+  "essay-checker/ib-essay":
+    "IB checks emphasize research focus, criteria alignment, analysis depth, and places where background may replace explanation.",
+  "thesis-statement-checker":
+    "Thesis checks ask whether the controlling idea is clear enough to guide every paragraph that follows.",
+  "essay-outline-checker":
+    "Outline checks catch structure problems early, before weak paragraph order becomes a full-draft rewrite.",
+  "paragraph-checker":
+    "Paragraph checks zoom in on topic sentences, evidence, analysis, and transitions without losing the essay context.",
+  "essay-conclusion-checker":
+    "Conclusion checks look for closure, synthesis, and a final takeaway instead of repeated introduction language.",
+  "essay-hook-checker":
+    "Hook checks make sure the opening earns attention while still leading cleanly into the thesis.",
+  "rubric-checker":
+    "Rubric checks compare your draft to the criteria, helping you spot missing categories before submission.",
+};
+
 export function getSeoLandingPage(slug: string) {
   return pagesBySlug.get(slug);
 }
@@ -1807,13 +1850,9 @@ export function getSeoLandingPageHref(page: SeoLandingPage) {
   return `/${page.slug}`;
 }
 
-export const footerSeoLinks = [
-  "essay-checker",
-  "ai-essay-checker",
-  "essay-feedback",
-  "essay-grammar-checker",
-  "rubric-checker",
-  "thesis-statement-checker",
-]
-  .map(getSeoLandingPage)
-  .filter((page): page is SeoLandingPage => Boolean(page));
+export function getSeoLandingPageChecksIntro(page: SeoLandingPage) {
+  return (
+    checksIntroBySlug[page.slug] ??
+    `${page.title} highlights the most useful revision signals for this draft type.`
+  );
+}

@@ -17,6 +17,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { baseUrl } from "@/lib/site";
 import {
   getRelatedSeoPages,
+  getSeoLandingPageChecksIntro,
   getSeoLandingPageHref,
   type SeoLandingPage,
 } from "@/lib/seo/landing-pages";
@@ -186,14 +187,12 @@ export function SeoLandingPage({ page }: SeoLandingPageProps) {
                   <div className="relative flex size-36 items-center justify-center rounded-full bg-[#c8f85a]/10">
                     <div className="absolute inset-3 rounded-full border-[12px] border-[#c8f85a]/22" />
                     <div className="absolute inset-3 rounded-full border-[12px] border-transparent border-t-[#c8f85a] border-r-[#c8f85a]" />
-                    <div className="relative text-center">
-                      <strong className="block text-5xl font-black tracking-[-0.08em]">
-                        ??
-                      </strong>
-                      <span className="text-[0.65rem] font-black uppercase tracking-[0.18em] text-[#c8f85a]">
-                        Score after scan
-                      </span>
-                    </div>
+                    <p
+                      className="relative text-center text-5xl font-black leading-none tracking-[-0.08em]"
+                      aria-label="Score hidden until scan"
+                    >
+                      ??
+                    </p>
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -252,9 +251,7 @@ export function SeoLandingPage({ page }: SeoLandingPageProps) {
               </h2>
             </div>
             <p className="max-w-2xl text-base font-medium leading-7 text-[#6c7065] lg:justify-self-end">
-              The report focuses on concrete revision signals tied to your
-              prompt, rubric, and draft instead of vague “make it better”
-              advice.
+              {getSeoLandingPageChecksIntro(page)}
             </p>
           </div>
 
