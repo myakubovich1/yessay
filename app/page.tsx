@@ -51,7 +51,7 @@ export default function Home() {
           <div className="max-w-2xl py-10">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/8 px-3 py-2 text-xs font-bold text-white/82">
               <Sparkles size={14} className="text-[#c8f85a]" />
-              AI feedback for the essay you already wrote
+              The fast way to make your essay perfect.
             </div>
             <h1 className="mt-7 text-balance text-[3.3rem] font-black leading-[0.96] tracking-[-0.065em] sm:text-7xl lg:text-[5.2rem]">
               Know what to fix{" "}
