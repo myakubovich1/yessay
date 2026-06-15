@@ -3,284 +3,281 @@
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
-/**
- * One continuous scene, three beats:
- *   struggle — a messy draft full of scribbles, issue chips pulsing
- *   scan     — a lime beam sweeps the page, scribbles straighten
- *   done     — chips flip to checks, score ring pops, sparkles
- * Elements transform in place; nothing hard-swaps. Transforms and
- * opacity only; honors prefers-reduced-motion.
- */
-
-type Beat = "struggle" | "scan" | "done";
+type Beat = "stuck" | "review" | "submitted";
 
 const BEAT_MS: Record<Beat, number> = {
-  struggle: 3600,
-  scan: 3400,
-  done: 4600,
+  stuck: 3200,
+  review: 3600,
+  submitted: 4400,
 };
+
 const NEXT: Record<Beat, Beat> = {
-  struggle: "scan",
-  scan: "done",
-  done: "struggle",
+  stuck: "review",
+  review: "submitted",
+  submitted: "stuck",
+};
+
+const CAPTIONS: Record<Beat, string> = {
+  stuck: "A draft full of questions",
+  review: "Yessay finds what matters",
+  submitted: "Revised and ready to submit",
 };
 
 const INK = "#171912";
 const LIME = "#c8f85a";
 const PAPER = "#fffdf8";
-const MUTED = "#a9ad9e";
+const CREAM = "#f6f1e8";
 const ORANGE = "#ff8b5e";
-const OLIVE = "#617c12";
+const LAVENDER = "#cfc3ff";
+const MUTED = "#7b7f73";
 
-const spring = { type: "spring" as const, stiffness: 260, damping: 20 };
-const soft = { duration: 0.7, ease: [0.32, 0.72, 0, 1] as const };
+const soft = {
+  duration: 0.65,
+  ease: [0.32, 0.72, 0, 1] as const,
+};
 
-const CAPTIONS: Record<Beat, string> = {
-  struggle: "The rough draft",
-  scan: "Scanning the draft",
-  done: "Ready to submit",
+const spring = {
+  type: "spring" as const,
+  stiffness: 250,
+  damping: 20,
 };
 
 export function RevisionAnimation() {
-  const reduced = useReducedMotion();
-  const [beat, setBeat] = useState<Beat>(reduced ? "done" : "struggle");
+  const reducedMotion = useReducedMotion() ?? false;
+  const [beat, setBeat] = useState<Beat>(
+    reducedMotion ? "submitted" : "stuck",
+  );
 
   useEffect(() => {
-    if (reduced) return;
-    const timer = setTimeout(() => setBeat(NEXT[beat]), BEAT_MS[beat]);
-    return () => clearTimeout(timer);
-  }, [beat, reduced]);
+    if (reducedMotion) return;
+
+    const timer = window.setTimeout(
+      () => setBeat(NEXT[beat]),
+      BEAT_MS[beat],
+    );
+    return () => window.clearTimeout(timer);
+  }, [beat, reducedMotion]);
 
   const is = (...beats: Beat[]) => beats.includes(beat);
 
   return (
     <div
-      aria-hidden
-      className="flex h-full w-full flex-col items-center justify-center gap-6 px-8 py-10"
+      className="flex h-full w-full flex-col items-center justify-center gap-4 px-6 py-7"
       data-animation="revision"
+      role="img"
+      aria-label="A student moves from struggling with a rough draft to reviewing clear Yessay feedback and confidently submitting the revised essay."
     >
-      <svg viewBox="230 58 322 344" className="w-full max-w-[330px]">
-        {/* ---------- report page (hard-shadow tactile card) ---------- */}
-        <g>
-          <rect x="306" y="128" width="186" height="252" rx="22" fill={INK} />
-          <motion.g
-            animate={
-              is("done") && !reduced
-                ? { y: [0, -5, 0], transition: { duration: 3, repeat: Infinity, ease: "easeInOut" } }
-                : { y: 0 }
-            }
+      <svg
+        viewBox="0 0 420 370"
+        className="w-full max-w-[390px]"
+        aria-hidden="true"
+      >
+        <defs>
+          <radialGradient id="revision-glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={LIME} stopOpacity="0.5" />
+            <stop offset="100%" stopColor={LIME} stopOpacity="0" />
+          </radialGradient>
+          <linearGradient id="revision-screen" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#25291f" />
+            <stop offset="100%" stopColor={INK} />
+          </linearGradient>
+        </defs>
+
+        <rect
+          x="15"
+          y="14"
+          width="390"
+          height="330"
+          rx="34"
+          fill={CREAM}
+          stroke={INK}
+          strokeWidth="2"
+        />
+        <path
+          d="M49 48 H371"
+          stroke={INK}
+          strokeOpacity="0.08"
+          strokeWidth="2"
+        />
+        <circle cx="48" cy="32" r="4" fill={ORANGE} />
+        <circle cx="62" cy="32" r="4" fill={LAVENDER} />
+        <circle cx="76" cy="32" r="4" fill={LIME} />
+
+        <motion.ellipse
+          cx="250"
+          cy="165"
+          rx="145"
+          ry="125"
+          fill="url(#revision-glow)"
+          initial={false}
+          animate={{
+            opacity: is("review", "submitted") ? 1 : 0.12,
+            scale: is("review") ? [0.82, 1.08, 0.94] : 0.94,
+          }}
+          transition={
+            is("review")
+              ? { duration: 2.7, repeat: Infinity, ease: "easeInOut" }
+              : soft
+          }
+          style={{ transformOrigin: "250px 165px" }}
+        />
+
+        <DeadlineChip active={is("stuck")} />
+
+        <motion.g
+          initial={false}
+          animate={{
+            x: is("stuck") ? -3 : 0,
+            y: is("stuck") ? 7 : is("submitted") ? -3 : 0,
+          }}
+          transition={soft}
+        >
+          <Student beat={beat} />
+        </motion.g>
+
+        <Desk />
+
+        <motion.g
+          initial={false}
+          animate={{ y: is("review") ? [0, -3, 0] : 0 }}
+          transition={
+            is("review")
+              ? { duration: 2.2, repeat: Infinity, ease: "easeInOut" }
+              : soft
+          }
+        >
+          <Laptop beat={beat} reducedMotion={reducedMotion} />
+        </motion.g>
+
+        <motion.g
+          initial={false}
+          animate={{
+            opacity: is("stuck") ? 1 : 0,
+            x: is("stuck") ? 0 : -8,
+            y: is("stuck") ? 0 : 6,
+          }}
+          transition={soft}
+        >
+          <MessyPaper x={48} y={243} rotate={-7} />
+          <MessyPaper x={101} y={252} rotate={5} />
+          <IssueBubble x={63} y={102} label="?" color={ORANGE} delay={0} />
+          <IssueBubble x={332} y={94} label="!" color={LAVENDER} delay={0.35} />
+        </motion.g>
+
+        <motion.g
+          initial={false}
+          animate={{
+            opacity: is("submitted") ? 1 : 0,
+            scale: is("submitted") ? 1 : 0.7,
+          }}
+          transition={is("submitted") ? { delay: 0.35, ...spring } : soft}
+          style={{ transformOrigin: "336px 76px" }}
+        >
+          <rect
+            x="299"
+            y="54"
+            width="87"
+            height="45"
+            rx="14"
+            fill={PAPER}
+            stroke={INK}
+            strokeWidth="2"
+          />
+          <circle
+            cx="320"
+            cy="76"
+            r="11"
+            fill={LIME}
+            stroke={INK}
+            strokeWidth="2"
+          />
+          <path
+            d="M314 76 l4 4 l8 -9"
+            fill="none"
+            stroke={INK}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2.5"
+          />
+          <text
+            x="337"
+            y="73"
+            fill={INK}
+            fontFamily="inherit"
+            fontSize="8"
+            fontWeight="900"
           >
-            <rect
-              x="298"
-              y="120"
-              width="186"
-              height="252"
-              rx="22"
-              fill={PAPER}
-              stroke={INK}
-              strokeWidth="3"
-            />
-            {/* header */}
-            <circle cx="328" cy="152" r="9" fill={LIME} stroke={INK} strokeWidth="2.5" />
-            <rect x="346" y="147" width="74" height="9" rx="4.5" fill={INK} />
-
-            {/* messy scribbles (struggle) */}
-            <motion.g
-              animate={{ opacity: is("struggle") ? 1 : 0 }}
-              transition={soft}
-              stroke={MUTED}
-              strokeWidth="6"
-              strokeLinecap="round"
-              fill="none"
-            >
-              <path d="M320 192 q14 -8 28 0 t28 0 t28 0 t28 0 t18 -2" />
-              <path d="M320 222 q12 8 24 0 t24 0 t24 0 t24 2" />
-              <path d="M320 252 q16 -7 30 0 t30 0 t30 0 t28 -3" />
-              <path d="M320 282 q12 7 24 0 t24 0 t20 2" />
-              <path d="M320 312 q14 -8 28 0 t26 0" />
-            </motion.g>
-
-            {/* clean lines (scan + done) */}
-            <g>
-              {[192, 222, 252, 282, 312].map((y, i) => (
-                <motion.rect
-                  key={y}
-                  x="318"
-                  y={y - 5}
-                  rx="5"
-                  height="10"
-                  fill={i === 1 || i === 3 ? OLIVE : INK}
-                  opacity={i === 1 || i === 3 ? 0.85 : 0.16}
-                  initial={false}
-                  animate={{
-                    width: is("struggle") ? 0 : i === 4 ? 86 : 148,
-                    transition: is("scan")
-                      ? { delay: 0.5 + i * 0.32, duration: 0.45, ease: "easeOut" }
-                      : soft,
-                  }}
-                />
-              ))}
-              {/* lime highlight pills sliding in behind two rows */}
-              {[222, 282].map((y, i) => (
-                <motion.rect
-                  key={y}
-                  x="314"
-                  y={y - 9}
-                  rx="9"
-                  height="18"
-                  fill={LIME}
-                  opacity="0.55"
-                  initial={false}
-                  animate={{
-                    width: is("done") ? 156 : 0,
-                    transition: { delay: 0.25 + i * 0.2, ...soft },
-                  }}
-                />
-              ))}
-            </g>
-
-            {/* footer row */}
-            <rect x="318" y="340" width="52" height="9" rx="4.5" fill={INK} opacity="0.14" />
-            <motion.g
-              initial={false}
-              animate={
-                is("done")
-                  ? { scale: 1, transition: { delay: 0.55, ...spring } }
-                  : { scale: 0 }
-              }
-              style={{ originX: "452px", originY: "344px" }}
-            >
-              <circle cx="452" cy="344" r="13" fill={LIME} stroke={INK} strokeWidth="2.5" />
-              <path
-                d="M446 344 l4.5 4.5 L458 339"
-                stroke={INK}
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-              />
-            </motion.g>
-          </motion.g>
-
-          {/* scan beam */}
-          <motion.g
-            initial={false}
-            animate={{ opacity: is("scan") ? 1 : 0 }}
-            transition={{ duration: 0.3 }}
+            ESSAY
+          </text>
+          <text
+            x="337"
+            y="84"
+            fill={MUTED}
+            fontFamily="inherit"
+            fontSize="7"
+            fontWeight="750"
           >
-            <motion.g
-              initial={false}
-              animate={
-                is("scan")
-                  ? { y: [0, 218, 0, 218], transition: { duration: 3, ease: "easeInOut", times: [0, 0.4, 0.55, 1] } }
-                  : { y: 0 }
-              }
-            >
-              <rect x="290" y="132" width="202" height="40" rx="8" fill={LIME} opacity="0.28" />
-              <rect x="290" y="150" width="202" height="4" rx="2" fill={LIME} />
-              <circle cx="290" cy="152" r="6" fill={LIME} stroke={INK} strokeWidth="2" />
-              <circle cx="492" cy="152" r="6" fill={LIME} stroke={INK} strokeWidth="2" />
-            </motion.g>
-          </motion.g>
+            SUBMITTED
+          </text>
+        </motion.g>
 
-          {/* issue chips -> become checks */}
-          <Chip x={296} y={112} flip={!is("struggle")} delay={0.35} kind="x" />
-          <Chip x={486} y={262} flip={!is("struggle")} delay={0.55} kind="bang" />
-
-          {/* score ring */}
-          <motion.g
-            initial={false}
-            animate={
-              is("done")
-                ? { scale: 1, rotate: 0, transition: { delay: 0.15, ...spring } }
-                : { scale: 0, rotate: -12 }
-            }
-            style={{ originX: "486px", originY: "128px" }}
-          >
-            <circle cx="486" cy="128" r="37" fill={INK} />
-            <circle cx="482" cy="124" r="37" fill={PAPER} stroke={INK} strokeWidth="3" />
-            <motion.circle
-              cx="482"
-              cy="124"
-              r="28"
-              fill="none"
-              stroke={LIME}
-              strokeWidth="7"
-              strokeLinecap="round"
-              strokeDasharray={2 * Math.PI * 28}
-              initial={false}
-              animate={{
-                strokeDashoffset: is("done")
-                  ? 2 * Math.PI * 28 * 0.08
-                  : 2 * Math.PI * 28,
-                transition: { delay: 0.4, duration: 1, ease: [0.32, 0.72, 0, 1] },
-              }}
-              transform="rotate(-90 482 124)"
-            />
-            <text
-              x="482"
-              y="124"
-              textAnchor="middle"
-              dominantBaseline="central"
-              fontSize="22"
-              fontWeight="900"
-              fill={INK}
-              fontFamily="inherit"
-            >
-              92
-            </text>
-          </motion.g>
-        </g>
-
-        {/* ---------- sparkles on done ---------- */}
         {[
-          { x: 258, y: 130, d: 0.5, s: 1 },
-          { x: 530, y: 210, d: 0.65, s: 0.8 },
-          { x: 268, y: 330, d: 0.8, s: 0.7 },
-          { x: 520, y: 86, d: 0.95, s: 0.9 },
-        ].map((sp) => (
+          { x: 285, y: 66, delay: 0.55, color: ORANGE },
+          { x: 390, y: 125, delay: 0.72, color: LAVENDER },
+          { x: 364, y: 226, delay: 0.9, color: LIME },
+        ].map((sparkle) => (
           <motion.path
-            key={`${sp.x}-${sp.y}`}
-            d="M0 -9 L2.4 -2.4 L9 0 L2.4 2.4 L0 9 L-2.4 2.4 L-9 0 L-2.4 -2.4 Z"
-            fill={OLIVE}
+            key={`${sparkle.x}-${sparkle.y}`}
+            d="M0 -8 L2 -2 L8 0 L2 2 L0 8 L-2 2 L-8 0 L-2 -2 Z"
+            fill={sparkle.color}
+            stroke={INK}
+            strokeWidth="1.2"
             initial={false}
             animate={
-              is("done")
+              is("submitted")
                 ? {
-                    scale: [0, sp.s, 0],
-                    rotate: [0, 90],
-                    transition: { delay: sp.d, duration: 1.4, ease: "easeOut" },
+                    scale: [0, 1, 0.86],
+                    rotate: [0, 90, 125],
+                    opacity: [0, 1, 0.72],
                   }
-                : { scale: 0 }
+                : { scale: 0, opacity: 0 }
             }
-            style={{ x: sp.x, y: sp.y }}
+            transition={{
+              delay: sparkle.delay,
+              duration: 1.15,
+              ease: "easeOut",
+            }}
+            style={{ x: sparkle.x, y: sparkle.y }}
           />
         ))}
       </svg>
 
-      {/* caption + beat dots */}
       <div className="flex flex-col items-center gap-2.5">
         <div className="relative h-4 w-72">
-          {(Object.keys(CAPTIONS) as Beat[]).map((b) => (
+          {(Object.keys(CAPTIONS) as Beat[]).map((captionBeat) => (
             <motion.p
-              key={b}
+              key={captionBeat}
               initial={false}
-              animate={{ opacity: beat === b ? 1 : 0, y: beat === b ? 0 : 5 }}
-              transition={{ duration: 0.4 }}
-              className="absolute inset-0 text-center text-[11px] font-black uppercase tracking-[0.32em] text-[#6c7065]"
+              animate={{
+                opacity: beat === captionBeat ? 1 : 0,
+                y: beat === captionBeat ? 0 : 5,
+              }}
+              transition={{ duration: 0.35 }}
+              className="absolute inset-0 text-center text-[10px] font-black uppercase tracking-[0.24em] text-[#6c7065]"
             >
-              {CAPTIONS[b]}
+              {CAPTIONS[captionBeat]}
             </motion.p>
           ))}
         </div>
         <div className="flex gap-1.5">
-          {(Object.keys(CAPTIONS) as Beat[]).map((b) => (
+          {(Object.keys(CAPTIONS) as Beat[]).map((dotBeat) => (
             <motion.span
-              key={b}
+              key={dotBeat}
               initial={false}
               animate={{
-                width: beat === b ? 22 : 6,
-                backgroundColor: beat === b ? "#171912" : "#17191233",
+                width: beat === dotBeat ? 22 : 6,
+                backgroundColor:
+                  beat === dotBeat ? INK : "rgba(23, 25, 18, 0.18)",
               }}
               transition={soft}
               className="h-1.5 rounded-full"
@@ -292,65 +289,523 @@ export function RevisionAnimation() {
   );
 }
 
-/** Issue chip that flips into a lime check once the scan passes. */
-function Chip({
-  x,
-  y,
-  flip,
-  delay,
-  kind,
-}: {
-  x: number;
-  y: number;
-  flip: boolean;
-  delay: number;
-  kind: "x" | "bang";
-}) {
+function Student({ beat }: { beat: Beat }) {
+  const submitted = beat === "submitted";
+  const stuck = beat === "stuck";
+
   return (
     <g>
-      {/* problem state */}
+      <path
+        d="M72 274 C73 232 89 206 121 200 C154 205 169 234 170 274 Z"
+        fill={LAVENDER}
+        stroke={INK}
+        strokeWidth="3"
+      />
+      <path
+        d="M95 206 C102 192 139 191 148 207 L143 223 H99 Z"
+        fill={ORANGE}
+        stroke={INK}
+        strokeWidth="3"
+      />
       <motion.g
         initial={false}
-        animate={
-          flip
-            ? { scale: 0, transition: { delay, duration: 0.25, ease: "easeIn" } }
-            : { scale: [1, 1.06, 1], transition: { duration: 2.4, repeat: Infinity, ease: "easeInOut" } }
-        }
-        style={{ originX: `${x}px`, originY: `${y}px` }}
+        animate={{
+          rotate: stuck ? 9 : submitted ? -3 : 0,
+          y: stuck ? 8 : 0,
+        }}
+        transition={soft}
+        style={{ transformOrigin: "122px 163px" }}
       >
-        <rect x={x - 17} y={y - 17} width="34" height="34" rx="11" fill={PAPER} stroke={INK} strokeWidth="2.5" />
-        {kind === "x" ? (
-          <>
-            <path d={`M${x - 6} ${y - 6} L${x + 6} ${y + 6}`} stroke={ORANGE} strokeWidth="3.5" strokeLinecap="round" />
-            <path d={`M${x + 6} ${y - 6} L${x - 6} ${y + 6}`} stroke={ORANGE} strokeWidth="3.5" strokeLinecap="round" />
-          </>
-        ) : (
-          <>
-            <path d={`M${x} ${y - 8} L${x} ${y + 2}`} stroke={ORANGE} strokeWidth="3.5" strokeLinecap="round" />
-            <circle cx={x} cy={y + 8} r="2.2" fill={ORANGE} />
-          </>
-        )}
-      </motion.g>
-      {/* solved state */}
-      <motion.g
-        initial={false}
-        animate={
-          flip
-            ? { scale: 1, transition: { delay: delay + 0.22, ...spring } }
-            : { scale: 0 }
-        }
-        style={{ originX: `${x}px`, originY: `${y}px` }}
-      >
-        <rect x={x - 17} y={y - 17} width="34" height="34" rx="11" fill={LIME} stroke={INK} strokeWidth="2.5" />
-        <path
-          d={`M${x - 7} ${y} l5 5 l9 -10`}
+        <ellipse
+          cx="122"
+          cy="164"
+          rx="39"
+          ry="43"
+          fill={ORANGE}
           stroke={INK}
-          strokeWidth="3.5"
+          strokeWidth="3"
+        />
+        <path
+          d="M83 160 C80 122 103 109 132 116 C155 121 165 142 158 168 C151 147 143 139 126 135 C108 143 98 146 83 160 Z"
+          fill={INK}
+        />
+        <path
+          d="M91 136 C103 115 131 109 151 128"
+          fill="none"
+          stroke={INK}
+          strokeLinecap="round"
+          strokeWidth="7"
+        />
+        <motion.g
+          initial={false}
+          animate={{ opacity: stuck ? 1 : 0 }}
+          transition={{ duration: 0.25 }}
+        >
+          <path
+            d="M103 166 l8 -2"
+            stroke={INK}
+            strokeLinecap="round"
+            strokeWidth="3"
+          />
+          <path
+            d="M133 163 l8 2"
+            stroke={INK}
+            strokeLinecap="round"
+            strokeWidth="3"
+          />
+          <path
+            d="M116 186 q8 -7 16 0"
+            fill="none"
+            stroke={INK}
+            strokeLinecap="round"
+            strokeWidth="3"
+          />
+        </motion.g>
+        <motion.g
+          initial={false}
+          animate={{ opacity: stuck ? 0 : 1 }}
+          transition={{ delay: 0.12, duration: 0.28 }}
+        >
+          <circle cx="108" cy="164" r="2.8" fill={INK} />
+          <circle cx="137" cy="164" r="2.8" fill={INK} />
+          <motion.path
+            d={
+              submitted
+                ? "M113 181 q10 12 21 0"
+                : "M116 183 q8 3 16 0"
+            }
+            fill="none"
+            stroke={INK}
+            strokeLinecap="round"
+            strokeWidth="3"
+          />
+        </motion.g>
+      </motion.g>
+
+      <motion.path
+        d={stuck ? "M99 221 Q76 232 92 255" : "M99 221 Q90 241 109 257"}
+        fill="none"
+        stroke={INK}
+        strokeLinecap="round"
+        strokeWidth="14"
+        transition={soft}
+      />
+      <motion.path
+        d={
+          stuck
+            ? "M145 222 Q162 236 156 258"
+            : submitted
+              ? "M145 222 Q166 204 178 183"
+              : "M145 222 Q158 239 151 258"
+        }
+        fill="none"
+        stroke={INK}
+        strokeLinecap="round"
+        strokeWidth="14"
+        transition={soft}
+      />
+      <motion.circle
+        cx={submitted ? 178 : stuck ? 156 : 151}
+        cy={submitted ? 183 : 258}
+        r="8"
+        fill={ORANGE}
+        stroke={INK}
+        strokeWidth="2"
+        transition={soft}
+      />
+    </g>
+  );
+}
+
+function Desk() {
+  return (
+    <g>
+      <rect x="42" y="270" width="336" height="22" rx="11" fill={INK} />
+      <rect x="60" y="290" width="18" height="47" rx="8" fill={INK} />
+      <rect x="342" y="290" width="18" height="47" rx="8" fill={INK} />
+    </g>
+  );
+}
+
+function Laptop({
+  beat,
+  reducedMotion,
+}: {
+  beat: Beat;
+  reducedMotion: boolean;
+}) {
+  const reviewing = beat === "review";
+  const submitted = beat === "submitted";
+
+  return (
+    <g>
+      <rect
+        x="171"
+        y="115"
+        width="170"
+        height="145"
+        rx="16"
+        fill={INK}
+      />
+      <rect
+        x="178"
+        y="122"
+        width="156"
+        height="131"
+        rx="11"
+        fill="url(#revision-screen)"
+        stroke={PAPER}
+        strokeOpacity="0.12"
+      />
+      <circle cx="256" cy="118" r="2" fill={PAPER} fillOpacity="0.45" />
+      <path
+        d="M154 260 H357 L373 275 H142 Z"
+        fill={PAPER}
+        stroke={INK}
+        strokeLinejoin="round"
+        strokeWidth="3"
+      />
+      <rect x="229" y="263" width="55" height="5" rx="2.5" fill={INK} />
+
+      <motion.g
+        initial={false}
+        animate={{ opacity: beat === "stuck" ? 1 : 0 }}
+        transition={soft}
+      >
+        <rect
+          x="196"
+          y="144"
+          width="104"
+          height="8"
+          rx="4"
+          fill={PAPER}
+          fillOpacity="0.34"
+        />
+        <rect
+          x="196"
+          y="165"
+          width="120"
+          height="7"
+          rx="3.5"
+          fill={PAPER}
+          fillOpacity="0.12"
+        />
+        <rect
+          x="196"
+          y="183"
+          width="92"
+          height="7"
+          rx="3.5"
+          fill={PAPER}
+          fillOpacity="0.12"
+        />
+        <rect
+          x="196"
+          y="201"
+          width="111"
+          height="7"
+          rx="3.5"
+          fill={ORANGE}
+          fillOpacity="0.72"
+        />
+        <path
+          d="M201 224 h42"
+          stroke={PAPER}
+          strokeLinecap="round"
+          strokeOpacity="0.2"
+          strokeWidth="7"
+        />
+      </motion.g>
+
+      <motion.g
+        initial={false}
+        animate={{
+          opacity: reviewing ? 1 : 0,
+          scale: reviewing ? 1 : 0.94,
+        }}
+        transition={soft}
+        style={{ transformOrigin: "256px 184px" }}
+      >
+        <rect
+          x="192"
+          y="138"
+          width="128"
+          height="98"
+          rx="13"
+          fill={PAPER}
+        />
+        <rect
+          x="203"
+          y="149"
+          width="30"
+          height="30"
+          rx="9"
+          fill={LIME}
+          stroke={INK}
+          strokeWidth="2"
+        />
+        <path
+          d="M212 157 h10 v13 h-10 z M215 160 l4 4 l-4 4"
+          fill="none"
+          stroke={INK}
           strokeLinecap="round"
           strokeLinejoin="round"
+          strokeWidth="2"
+        />
+        <rect x="242" y="153" width="60" height="7" rx="3.5" fill={INK} />
+        {[180, 199, 218].map((y, index) => (
+          <g key={y}>
+            <circle
+              cx="208"
+              cy={y}
+              r="6"
+              fill={index === 1 ? ORANGE : LAVENDER}
+              stroke={INK}
+              strokeWidth="1.5"
+            />
+            <rect
+              x="220"
+              y={y - 4}
+              width={index === 1 ? 72 : 84}
+              height="8"
+              rx="4"
+              fill={INK}
+              fillOpacity="0.16"
+            />
+          </g>
+        ))}
+        <motion.rect
+          x="189"
+          y="139"
+          width="134"
+          height="20"
+          rx="8"
+          fill={LIME}
+          fillOpacity="0.35"
+          initial={false}
+          animate={{ y: reviewing ? [0, 77, 0] : 0 }}
+          transition={
+            reviewing && !reducedMotion
+              ? { duration: 2.4, repeat: Infinity, ease: "easeInOut" }
+              : { duration: 0 }
+          }
+        />
+        <motion.path
+          d="M192 149 H320"
+          stroke={LIME}
+          strokeWidth="3"
+          initial={false}
+          animate={{ y: reviewing ? [0, 77, 0] : 0 }}
+          transition={
+            reviewing && !reducedMotion
+              ? { duration: 2.4, repeat: Infinity, ease: "easeInOut" }
+              : { duration: 0 }
+          }
+        />
+      </motion.g>
+
+      <motion.g
+        initial={false}
+        animate={{
+          opacity: submitted ? 1 : 0,
+          scale: submitted ? 1 : 0.92,
+        }}
+        transition={submitted ? { delay: 0.1, ...spring } : soft}
+        style={{ transformOrigin: "256px 184px" }}
+      >
+        <circle cx="228" cy="177" r="28" fill={PAPER} />
+        <circle
+          cx="228"
+          cy="177"
+          r="21"
           fill="none"
+          stroke={LIME}
+          strokeLinecap="round"
+          strokeWidth="6"
+          strokeDasharray="132"
+          strokeDashoffset="11"
+          transform="rotate(-90 228 177)"
+        />
+        <text
+          x="228"
+          y="178"
+          fill={INK}
+          fontFamily="inherit"
+          fontSize="15"
+          fontWeight="950"
+          textAnchor="middle"
+          dominantBaseline="central"
+        >
+          92
+        </text>
+        <text
+          x="271"
+          y="166"
+          fill={PAPER}
+          fontFamily="inherit"
+          fontSize="8"
+          fontWeight="900"
+        >
+          READY TO
+        </text>
+        <text
+          x="271"
+          y="178"
+          fill={LIME}
+          fontFamily="inherit"
+          fontSize="11"
+          fontWeight="950"
+        >
+          SUBMIT
+        </text>
+        <rect x="270" y="190" width="45" height="20" rx="10" fill={LIME} />
+        <path
+          d="M283 200 l4 4 l8 -9"
+          fill="none"
+          stroke={INK}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2.4"
         />
       </motion.g>
     </g>
+  );
+}
+
+function DeadlineChip({ active }: { active: boolean }) {
+  return (
+    <motion.g
+      initial={false}
+      animate={{
+        opacity: active ? 1 : 0,
+        x: active ? 0 : -8,
+        y: active ? [0, -3, 0] : 5,
+      }}
+      transition={
+        active
+          ? { duration: 2.1, repeat: Infinity, ease: "easeInOut" }
+          : soft
+      }
+    >
+      <rect
+        x="42"
+        y="61"
+        width="103"
+        height="36"
+        rx="18"
+        fill={PAPER}
+        stroke={INK}
+        strokeWidth="2"
+      />
+      <circle cx="62" cy="79" r="10" fill={ORANGE} />
+      <path
+        d="M62 73 v7 l5 3"
+        fill="none"
+        stroke={INK}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+      <text
+        x="79"
+        y="76"
+        fill={INK}
+        fontFamily="inherit"
+        fontSize="7"
+        fontWeight="850"
+      >
+        DUE SOON
+      </text>
+      <text
+        x="79"
+        y="86"
+        fill={MUTED}
+        fontFamily="inherit"
+        fontSize="6.5"
+        fontWeight="750"
+      >
+        5 issues left
+      </text>
+    </motion.g>
+  );
+}
+
+function MessyPaper({
+  x,
+  y,
+  rotate,
+}: {
+  x: number;
+  y: number;
+  rotate: number;
+}) {
+  return (
+    <g transform={`translate(${x} ${y}) rotate(${rotate})`}>
+      <rect
+        x="0"
+        y="0"
+        width="64"
+        height="47"
+        rx="8"
+        fill={PAPER}
+        stroke={INK}
+        strokeWidth="2"
+      />
+      <path
+        d="M11 14 q8 -5 16 0 t16 0 M11 25 q7 5 14 0 t16 0 M11 36 h28"
+        fill="none"
+        stroke={MUTED}
+        strokeLinecap="round"
+        strokeWidth="3"
+      />
+    </g>
+  );
+}
+
+function IssueBubble({
+  x,
+  y,
+  label,
+  color,
+  delay,
+}: {
+  x: number;
+  y: number;
+  label: string;
+  color: string;
+  delay: number;
+}) {
+  return (
+    <motion.g
+      animate={{ y: [0, -6, 0], rotate: [-3, 3, -3] }}
+      transition={{
+        delay,
+        duration: 2.2,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+      style={{ transformOrigin: `${x}px ${y}px` }}
+    >
+      <circle
+        cx={x}
+        cy={y}
+        r="17"
+        fill={color}
+        stroke={INK}
+        strokeWidth="2"
+      />
+      <text
+        x={x}
+        y={y + 1}
+        fill={INK}
+        fontFamily="inherit"
+        fontSize="16"
+        fontWeight="950"
+        textAnchor="middle"
+        dominantBaseline="central"
+      >
+        {label}
+      </text>
+    </motion.g>
   );
 }

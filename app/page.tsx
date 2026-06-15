@@ -51,7 +51,8 @@ export default function Home() {
           <div className="max-w-2xl py-10">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/18 bg-white/8 px-3 py-2 text-xs font-bold text-white/82">
               <Sparkles size={14} className="text-[#c8f85a]" />
-              The fast way to make your essay perfect.
+              Get professional help with your essay. Trained on thousands of
+              works.
             </div>
             <h1 className="mt-7 text-balance text-[3.3rem] font-black leading-[0.96] tracking-[-0.065em] sm:text-7xl lg:text-[5.2rem]">
               Know what to fix{" "}
@@ -270,7 +271,7 @@ export default function Home() {
                 <ArrowRight size={17} />
               </Link>
             </div>
-            <div className="hidden min-w-[340px] items-center justify-center border-l border-[#171912] bg-[#fffdf8] lg:flex">
+            <div className="hidden min-w-[390px] items-center justify-center border-l border-[#171912] bg-[radial-gradient(circle_at_55%_38%,rgba(200,248,90,0.2),transparent_42%),#fffdf8] lg:flex">
               <RevisionAnimation />
             </div>
           </div>
